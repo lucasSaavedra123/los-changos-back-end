@@ -34,6 +34,5 @@ jobs:
       env: 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        cd walletify
         coverage run --source='walletify' manage.py test
         coveralls --service=github
