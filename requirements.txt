@@ -2,3 +2,7 @@ asgiref==3.5.2
 Django==4.1
 sqlparse==0.4.2
 tzdata==2022.2
+
+#Heroku necessary imports
+distribute==0.6.28
+setuptools==1.0
