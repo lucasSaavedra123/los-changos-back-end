@@ -1,1 +1,1 @@
-web: gunicorn walletify.wsgi --log-file -
+web: python manager.py runserver
