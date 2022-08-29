@@ -12,11 +12,15 @@ We strongly recommend to use virtual environments to develop for the Walletify b
 #### Conda
 To install the enviroment from Conda just type:
 
-    conda env create -f environment.yml -n "walletify-env" python=3.9
+    conda env create -n "walletify-env" python=3.9
 
 Then, activate it:
 
     conda activate walletify-env
+
+Finally, install the requirements:
+
+    pip install -r requirements.txt
 
 #### venv
 Verify your python version (It should be 3.9 or greater):
