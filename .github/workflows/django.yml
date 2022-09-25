@@ -29,10 +29,10 @@ jobs:
     - name: Run SQL Server
       run: |
         docker run
-          -e POSTGRES_PASSWORD=$DB_PASSWORD
-          -e POSTGRES_USER=$DB_USER
-          -e POSTGRES_DB=$DB_NAME
-          -p 8080:8080
+          -e POSTGRES_PASSWORD=$DB_PASSWORD \
+          -e POSTGRES_USER=$DB_USER \
+          -e POSTGRES_DB=$DB_NAME \
+          -p 8080:8080 \
           -d postgres
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
