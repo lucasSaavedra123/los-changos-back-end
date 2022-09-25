@@ -46,4 +46,8 @@ Finally, install the required modules:
 
     pip install -r requirements.txt
 
+### Generate requirements.txt
+
+    pip freeze > requirements.txt
+
 **Start Coding!**
