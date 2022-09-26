@@ -10,7 +10,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+import MySQLdb
+import pymysql
+
+pymysql.install_as_MySQLdb()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -74,12 +80,16 @@ WSGI_APPLICATION = 'walletify.wsgi.application'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+  'default': {
+    'ENGINE': os.environ.get('DB_ENGINE'),  # django.db.backends.postgresql or django_psdb_engine
+    'NAME': os.environ.get('DB_NAME'),
+    'HOST': os.environ.get('DB_HOST'),
+    'PORT': os.environ.get('DB_PORT'),
+    'USER': os.environ.get('DB_USER'),
+    'PASSWORD': os.environ.get('DB_PASSWORD'),
+    'OPTIONS': {'ssl': {'ca': os.environ.get('MYSQL_ATTR_SSL_CA')}}
+  }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
