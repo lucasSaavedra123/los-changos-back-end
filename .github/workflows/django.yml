@@ -12,7 +12,6 @@ env:
   DB_HOST: localhost
   DB_USER: walletify
   DB_PORT: 8080
-  DB_ENGINE: django.db.backends.postgresql
   MYSQL_ATTR_SSL_CA: /etc/ssl/cert.pem
 
 jobs:
@@ -26,9 +25,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Run SQL Server
+    - name: Run MySQL Server
       run: |
-        docker run -e POSTGRES_PASSWORD=$DB_PASSWORD -e POSTGRES_USER=$DB_USER -e POSTGRES_DB=$DB_NAME -p 8080:8080 -d postgres
+        docker run -e MYSQL_PASSWORD=$DB_PASSWORD -e MYSQL_USER=$DB_USER -e MYSQL_DATABASE=$DB_NAME -p 8080:8080 -d mysql:8.0.30
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:

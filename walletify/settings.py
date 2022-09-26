@@ -81,7 +81,7 @@ WSGI_APPLICATION = 'walletify.wsgi.application'
 
 DATABASES = {
   'default': {
-    'ENGINE': os.environ.get('DB_ENGINE'),  # django.db.backends.postgresql or django_psdb_engine
+    'ENGINE': 'django.db.backends.postgresql',
     'NAME': os.environ.get('DB_NAME'),
     'HOST': os.environ.get('DB_HOST'),
     'PORT': os.environ.get('DB_PORT'),
