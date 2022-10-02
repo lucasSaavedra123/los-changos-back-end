@@ -7,7 +7,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from categories.models import Category
 
-from users.models import User
 from .models import Transaction
 
 import json
