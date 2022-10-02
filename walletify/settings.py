@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 import os
 from pathlib import Path
+import firebase_admin
+import json
 
 import MySQLdb
 import pymysql
@@ -29,10 +31,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-j3r3l#6wm1-dh-e(torhql7mkcw+&y3q+wp*0^*m8asguklxzy'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Application definition
 
@@ -43,13 +46,18 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'users.apps.UsersConfig',
     'transactions.apps.TransactionsConfig',
+    'categories.apps.CategoriesConfig',
 ]
 
 MIDDLEWARE = [
+    #'walletify.middleware.CustomFirebaseAuthentication',
+    'walletify.middleware.CustomUserCreation',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -141,3 +149,24 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+#Create .json file
+FIREBASE_CONFIG_JSON = {
+  "type": os.environ.get('FIREBASE_TYPE'),
+  "project_id": os.environ.get('FIREBASE_TYPE_PROJECT_ID'),
+  "private_key_id": os.environ.get('FIREBASE_PRIVATE_KEY_ID'),
+  "private_key": os.environ.get('FIREBASE_PRIVATE_KEY_KEY'),
+  "client_email": os.environ.get('FIREBASE_CLIENT_EMAIL'),
+  "client_id": os.environ.get('FIREBASE_CLIENT_ID'),
+  "auth_uri": os.environ.get('FIREBASE_AUTH_URI'),
+  "token_uri": os.environ.get('FIREBASE_TOKEN_URI'),
+  "auth_provider_x509_cert_url": os.environ.get('FIREBASE_AUTH_PROVIDER_X509_CERT_URL'),
+  "client_x509_cert_url": os.environ.get('FIREBASE_CLIENT_X509_CERT_URL')
+}
+
+with open('firebase-config.json', 'w') as file:
+    json.dump(FIREBASE_CONFIG_JSON, file)
+
+FIREBASE_CONFIG = os.path.join(BASE_DIR, 'firebase-config.json')
+FIREBASE_CREDS = firebase_admin.credentials.Certificate(FIREBASE_CONFIG)
+FIREBASE_APP = firebase_admin.initialize_app(FIREBASE_CREDS)
