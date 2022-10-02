@@ -5,6 +5,7 @@ from django.core.serializers import serialize
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from categories.models import Category
 
 from users.models import User
 from .models import Transaction
@@ -22,16 +23,19 @@ def transaction(request):
         return JsonResponse(response_object)
 
     elif request.method == 'POST':
+        category = Category.objects.get(id=request_body['category_id'])
+
         Transaction.objects.create(
             user=request.META['user'],
             value=request_body['value'],
+            category=category,
             date=request_body['date']
         )
 
         return Response(None, status=status.HTTP_201_CREATED)
 
     elif request.method == 'DELETE':
-        transaction_instace = Transaction.objects.get(pk=request_body['transaction_id'])
+        transaction_instace = Transaction.objects.get(id=request_body['transaction_id'])
         transaction_instace.delete()
 
         return Response(None, status=status.HTTP_200_OK)
