@@ -40,3 +40,8 @@ def category(request):
         category.save()
 
         return Response(None, status=status.HTTP_200_OK)
+
+    elif request.method == 'DELETE':
+        category_instace = Category.objects.get(id=request_body['id'])
+        category_instace.delete()
+        return Response(None, status=status.HTTP_200_OK)
