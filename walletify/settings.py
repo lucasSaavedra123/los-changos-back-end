@@ -89,10 +89,10 @@ WSGI_APPLICATION = 'walletify.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-"""
+
 DATABASES = {
   'default': {
-    'ENGINE': 'django.db.backends.postgresql',
+    'ENGINE': 'django.db.backends.mysql',
     'NAME': os.environ.get('DB_NAME'),
     'HOST': os.environ.get('DB_HOST'),
     'PORT': os.environ.get('DB_PORT'),
@@ -101,14 +101,7 @@ DATABASES = {
     'OPTIONS': {'ssl': {'ca': os.environ.get('MYSQL_ATTR_SSL_CA')}}
   }
 }
-"""
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'db.sqlite3'
-    }
-}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
