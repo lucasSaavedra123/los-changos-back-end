@@ -7,7 +7,7 @@ import django.db.models.deletion
 def populate_static_categories(apps, schema_editor):
     Category = apps.get_model('categories', 'Category')
 
-    if Category.Category.objects.filter(user=None).count() == 0:
+    if Category.objects.filter(user=None).count() == 0:
         Category.objects.create(name="Impuestos y Servicios", material_ui_icon_name="AccountBalance")
         Category.objects.create(name="Entretenimiento y Ocio", material_ui_icon_name="Casino")
         Category.objects.create(name="Hogar y Mercado", material_ui_icon_name="Home")
