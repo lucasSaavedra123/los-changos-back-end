@@ -1,3 +1,5 @@
+import os
+
 from django.http import HttpResponse
 import firebase_admin
 
@@ -16,13 +18,14 @@ class CustomFirebaseAuthentication:
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        try:
-            authorization_header = request.META.get('HTTP_AUTHORIZATION')
-            token = authorization_header.replace("Bearer ", "")
-            decoded_token = firebase_admin.auth.verify_id_token(token)
-            request.META['uid'] = decoded_token['user_id']
-        except:
-            return Response(None, status=status.HTTP_401_UNAUTHORIZED)
+        if not os.environ.get('ENVIRONMENT') == "DEV":
+            try:
+                authorization_header = request.META.get('HTTP_AUTHORIZATION')
+                token = authorization_header.replace("Bearer ", "")
+                decoded_token = firebase_admin.auth.verify_id_token(token)
+                request.META['uid'] = decoded_token['user_id']
+            except:
+                return Response(None, status=status.HTTP_401_UNAUTHORIZED)
 
         return None
 
@@ -36,7 +39,9 @@ class CustomUserCreation:
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        request.META['uid'] = 'a' * 28
+
+        if os.environ.get('ENVIRONMENT') == "DEV":
+            request.META['uid'] = 'randomrandomrandomrandomrand'
 
         if not User.objects.filter(firebase_uid=request.META['uid']):
             User.objects.create(firebase_uid=request.META['uid'])

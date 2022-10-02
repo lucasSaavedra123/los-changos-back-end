@@ -49,7 +49,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    #'walletify.middleware.CustomFirebaseAuthentication',
+    'walletify.middleware.CustomFirebaseAuthentication',
     'walletify.middleware.CustomUserCreation',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
