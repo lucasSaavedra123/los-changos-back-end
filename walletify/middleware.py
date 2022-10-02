@@ -26,6 +26,8 @@ class CustomFirebaseAuthentication:
                 request.META['uid'] = decoded_token['user_id']
             except:
                 return Response(None, status=status.HTTP_401_UNAUTHORIZED)
+        elif os.environ.get('ENVIRONMENT') == "DEV" or os.environ.get('ENVIRONMENT') == "MIGRATION":
+            request.META['uid'] = 'randomrandomrandomrandomrand'
 
         return None
 
@@ -39,8 +41,6 @@ class CustomUserCreation:
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        if os.environ.get('ENVIRONMENT') == "DEV":
-            request.META['uid'] = 'randomrandomrandomrandomrand'
 
         if not User.objects.filter(firebase_uid=request.META['uid']):
             User.objects.create(firebase_uid=request.META['uid'])
