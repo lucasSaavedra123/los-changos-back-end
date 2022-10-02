@@ -155,7 +155,7 @@ FIREBASE_CONFIG_JSON = {
   "type": os.environ.get('FIREBASE_TYPE'),
   "project_id": os.environ.get('FIREBASE_TYPE_PROJECT_ID'),
   "private_key_id": os.environ.get('FIREBASE_PRIVATE_KEY_ID'),
-  "private_key": os.environ.get('FIREBASE_PRIVATE_KEY_KEY'),
+  "private_key": os.environ.get('FIREBASE_PRIVATE_KEY_KEY').replace('\\n', '\n'),
   "client_email": os.environ.get('FIREBASE_CLIENT_EMAIL'),
   "client_id": os.environ.get('FIREBASE_CLIENT_ID'),
   "auth_uri": os.environ.get('FIREBASE_AUTH_URI'),
@@ -163,8 +163,6 @@ FIREBASE_CONFIG_JSON = {
   "auth_provider_x509_cert_url": os.environ.get('FIREBASE_AUTH_PROVIDER_X509_CERT_URL'),
   "client_x509_cert_url": os.environ.get('FIREBASE_CLIENT_X509_CERT_URL')
 }
-
-print(FIREBASE_CONFIG_JSON)
 
 with open('firebase-config.json', 'w') as file:
     json.dump(FIREBASE_CONFIG_JSON, file)
