@@ -92,7 +92,7 @@ DATABASES = {
     }
 }
 
-"""
+
 if os.environ.get('ENVIRONMENT') == "DEV":
     DATABASES = {
         'default': {
@@ -100,31 +100,19 @@ if os.environ.get('ENVIRONMENT') == "DEV":
             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
         }
     }
-elif os.environ.get('ENVIRONMENT') == "CI":
+
+elif os.environ.get('ENVIRONMENT') == "CI" or os.environ.get('ENVIRONMENT') == "PROD" or os.environ.get('ENVIRONMENT') == "MIGRATION":
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql',
+            'ENGINE': 'django.db.backends.postgresql',
             'NAME': os.environ.get('DB_NAME'),
             'HOST': os.environ.get('DB_HOST'),
             'PORT': os.environ.get('DB_PORT'),
             'USER': os.environ.get('DB_USER'),
             'PASSWORD': os.environ.get('DB_PASSWORD'),
-            'OPTIONS': {'ssl': {'ca': os.environ.get('MYSQL_ATTR_SSL_CA')}}
+            #'OPTIONS': {'ssl': {'ca': os.environ.get('MYSQL_ATTR_SSL_CA')}}
         }
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django_psdb_engine',
-            'NAME': os.environ.get('DB_NAME'),
-            'HOST': os.environ.get('DB_HOST'),
-            'PORT': os.environ.get('DB_PORT'),
-            'USER': os.environ.get('DB_USER'),
-            'PASSWORD': os.environ.get('DB_PASSWORD'),
-            'OPTIONS': {'ssl': {'ca': os.environ.get('MYSQL_ATTR_SSL_CA')}}
-        }
-    }
-"""
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators

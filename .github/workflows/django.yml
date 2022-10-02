@@ -7,12 +7,12 @@ on:
     branches: [ "master" ]
 
 env:
-#  DB_NAME: WalletifyDatabase
-#  DB_PASSWORD: WalletifyUnsecurePassword
-#  DB_HOST: localhost
-#  DB_USER: walletify
-#  DB_PORT: 8080
-#  MYSQL_ATTR_SSL_CA: /etc/ssl/cert.pem
+  DB_NAME: WalletifyDatabase
+  DB_PASSWORD: WalletifyUnsecurePassword
+  DB_HOST: localhost
+  DB_USER: walletify
+  DB_PORT: 8080
+  MYSQL_ATTR_SSL_CA: /etc/ssl/cert.pem
   ENVIRONMENT: CI
   FIREBASE_TYPE: ${{ secrets.FIREBASE_TYPE }}
   FIREBASE_TYPE_PROJECT_ID: ${{ secrets.FIREBASE_TYPE_PROJECT_ID }}-4b649
@@ -36,9 +36,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-#    - name: Run MySQL Server
-#      run: |
-#        docker run -e MYSQL_PASSWORD=$DB_PASSWORD -e MYSQL_USER=$DB_USER -e MYSQL_DATABASE=$DB_NAME -p 8080:8080 -d mysql:8.0.30
+    - name: Run MySQL Server
+      run: |
+        docker run -e POSTGRES_PASSWORD=$DB_PASSWORD -e POSTGRES_USER=$DB_USER -e POSTGRES_DB=$DB_NAME -p 8080:8080 -d postgres:14.5
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
