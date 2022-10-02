@@ -18,8 +18,8 @@ def transaction(request):
 
     if request.method == 'GET':
         user_transactions = Transaction.objects.filter(user=request.META['user'])
-        response_object = {"transactions":serialize("json", user_transactions)}
-        return JsonResponse(response_object)
+        response_object = json.loads(serialize("json", user_transactions))
+        return JsonResponse(response_object, safe=False)
 
     elif request.method == 'POST':
         category = Category.objects.get(id=request_body['category_id'])
