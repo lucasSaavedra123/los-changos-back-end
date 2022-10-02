@@ -36,5 +36,4 @@ def transaction(request):
     elif request.method == 'DELETE':
         transaction_instace = Transaction.objects.get(id=request_body['transaction_id'])
         transaction_instace.delete()
-
         return Response(None, status=status.HTTP_200_OK)
