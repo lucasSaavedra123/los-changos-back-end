@@ -3,9 +3,6 @@ import os
 from django.http import HttpResponse
 import firebase_admin
 
-from rest_framework.response import Response
-from rest_framework import status
-
 from users.models import User
 
 
@@ -25,7 +22,7 @@ class CustomFirebaseAuthentication:
                 decoded_token = firebase_admin.auth.verify_id_token(token)
                 request.META['uid'] = decoded_token['user_id']
             except:
-                return Response(None, status=status.HTTP_401_UNAUTHORIZED)
+                return HttpResponse(None, status=401)
         elif os.environ.get('ENVIRONMENT') == "DEV" or os.environ.get('ENVIRONMENT') == "MIGRATION":
             request.META['uid'] = 'randomrandomrandomrandomrand'
 
