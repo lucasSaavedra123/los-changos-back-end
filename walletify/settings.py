@@ -164,6 +164,8 @@ FIREBASE_CONFIG_JSON = {
   "client_x509_cert_url": os.environ.get('FIREBASE_CLIENT_X509_CERT_URL')
 }
 
+print(FIREBASE_CONFIG_JSON)
+
 with open('firebase-config.json', 'w') as file:
     json.dump(FIREBASE_CONFIG_JSON, file)
 
