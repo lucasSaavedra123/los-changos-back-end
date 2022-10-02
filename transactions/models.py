@@ -4,6 +4,7 @@ from categories.models import Category
 
 from users.models import User
 
+
 # Create your models here.
 class Transaction(models.Model):
     id=models.AutoField(primary_key=True, )
