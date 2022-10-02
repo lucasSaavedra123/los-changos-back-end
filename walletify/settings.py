@@ -51,6 +51,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'walletify.middleware.CustomFirebaseAuthentication',
     'walletify.middleware.CustomUserCreation',
+    'walletify.middleware.SanitizeRequest',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',

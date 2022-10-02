@@ -14,7 +14,7 @@ import json
 # Create your views here.
 @api_view(['GET', 'POST', 'DELETE', 'PATCH'])
 def transaction(request):
-    request_body = json.loads(request.body.decode('utf-8'))
+    request_body = request.META['body']
 
     if request.method == 'GET':
         user_transactions = Transaction.objects.filter(user=request.META['user'])

@@ -1,3 +1,4 @@
+import json
 import os
 
 from django.http import HttpResponse
@@ -43,5 +44,21 @@ class CustomUserCreation:
             User.objects.create(firebase_uid=request.META['uid'])
 
         request.META['user'] = User.objects.get(firebase_uid=request.META['uid'])
+
+        return None
+
+class SanitizeRequest:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        return response
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        if request.body == b'':
+            request.META['body'] = {}
+        else:
+            request.META['body'] = json.loads(request.body.decode('utf-8'))
 
         return None

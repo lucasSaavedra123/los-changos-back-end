@@ -15,7 +15,7 @@ from categories.models import Category
 # Create your views here.
 @api_view(['GET', 'POST', 'PATCH'])
 def category(request):
-    request_body = json.loads(request.body.decode('utf-8'))
+    request_body = request.META['body']
 
     if request.method == 'GET':
         static_categories = Category.objects.filter(user=None)
