@@ -18,7 +18,7 @@ class CustomFirebaseAuthentication:
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        if not os.environ.get('ENVIRONMENT') == "DEV":
+        if os.environ.get('ENVIRONMENT') == "PROD":
             try:
                 authorization_header = request.META.get('HTTP_AUTHORIZATION')
                 token = authorization_header.replace("Bearer ", "")
@@ -39,7 +39,6 @@ class CustomUserCreation:
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-
         if os.environ.get('ENVIRONMENT') == "DEV":
             request.META['uid'] = 'randomrandomrandomrandomrand'
 
