@@ -93,7 +93,7 @@ DATABASES = {
 }
 
 
-if os.environ.get('ENVIRONMENT') == "DEV":
+if os.environ.get('DATABASE') == "SQLITE":
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -101,7 +101,7 @@ if os.environ.get('ENVIRONMENT') == "DEV":
         }
     }
 
-elif os.environ.get('ENVIRONMENT') == "CI" or os.environ.get('ENVIRONMENT') == "PROD" or os.environ.get('ENVIRONMENT') == "MIGRATION":
+elif os.environ.get('DATABASE') == "POSTGRES":
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',

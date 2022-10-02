@@ -23,7 +23,7 @@ class CustomFirebaseAuthentication:
                 request.META['uid'] = decoded_token['user_id']
             except:
                 return HttpResponse(None, status=401)
-        elif os.environ.get('ENVIRONMENT') == "DEV" or os.environ.get('ENVIRONMENT') == "MIGRATION":
+        elif os.environ.get('ENVIRONMENT') == "DEV":
             request.META['uid'] = 'randomrandomrandomrandomrand'
 
         return None
