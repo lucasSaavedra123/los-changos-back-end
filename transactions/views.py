@@ -9,9 +9,12 @@ from rest_framework import status
 from users.models import User
 from .models import Transaction
 
+import json
+
 # Create your views here.
 @api_view(['GET', 'POST', 'DELETE'])
 def transaction(request):
+    request_body = json.loads(request.body.decode('utf-8'))
 
     if request.method == 'GET':
         user_transactions = Transaction.objects.filter(user=request.META['user'])
@@ -21,19 +24,14 @@ def transaction(request):
     elif request.method == 'POST':
         Transaction.objects.create(
             user=request.META['user'],
-            value=request.POST['value'],
-            date=request.POST['date']
+            value=request_body['value'],
+            date=request_body['date']
         )
 
         return Response(None, status=status.HTTP_201_CREATED)
 
-    """
     elif request.method == 'DELETE':
-        Transaction.objects.create(
-            user=request.META['transaction_id'],
-            value=request.POST['value'],
-            date=request.POST['date']
-        )
+        transaction_instace = Transaction.objects.get(pk=request_body['transaction_id'])
+        transaction_instace.delete()
 
         return Response(None, status=status.HTTP_200_OK)
-    """
