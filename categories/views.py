@@ -42,6 +42,6 @@ def category(request):
         return Response(None, status=status.HTTP_200_OK)
 
     elif request.method == 'DELETE':
-        category_instace = Category.objects.get(id=request_body['id'])
-        category_instace.delete()
+        category_instance = Category.objects.get(id=request_body['id'])
+        category_instance.delete()
         return Response(None, status=status.HTTP_200_OK)
