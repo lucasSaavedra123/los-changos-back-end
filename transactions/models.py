@@ -12,3 +12,4 @@ class Transaction(models.Model):
     date = models.DateField()
     value = models.DecimalField(max_digits=11, decimal_places=2, default=0.01, validators=[MinValueValidator(0.01)]) #Up to $100,000,000
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    name = models.CharField(max_length=50)

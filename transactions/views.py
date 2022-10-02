@@ -12,7 +12,7 @@ from .models import Transaction
 import json
 
 # Create your views here.
-@api_view(['GET', 'POST', 'DELETE'])
+@api_view(['GET', 'POST', 'DELETE', 'PATCH'])
 def transaction(request):
     request_body = json.loads(request.body.decode('utf-8'))
 
@@ -28,7 +28,8 @@ def transaction(request):
             user=request.META['user'],
             value=request_body['value'],
             category=category,
-            date=request_body['date']
+            date=request_body['date'],
+            name=request_body['name']
         )
 
         return Response(None, status=status.HTTP_201_CREATED)
@@ -36,4 +37,15 @@ def transaction(request):
     elif request.method == 'DELETE':
         transaction_instace = Transaction.objects.get(id=request_body['id'])
         transaction_instace.delete()
+        return Response(None, status=status.HTTP_200_OK)
+
+    elif request.method == 'PATCH':
+        transaction = Transaction.objects.get(id=request_body['id'])
+        transaction.name = request_body['name']
+        transaction.value = request_body['value']
+        transaction.date = request_body['date']
+        transaction.category=Category.objects.get(id=request_body['category_id'])
+
+        transaction.save()
+
         return Response(None, status=status.HTTP_200_OK)
