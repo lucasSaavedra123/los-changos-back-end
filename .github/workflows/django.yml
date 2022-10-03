@@ -57,4 +57,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         coverage run --source='walletify' manage.py test
+        coverage run --source='categories' manage.py test
+        coverage run --source='transactions' manage.py test
+        coverage run --source='users' manage.py test
         coveralls --service=github
