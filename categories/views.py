@@ -1,3 +1,4 @@
+from urllib import response
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.core.serializers import serialize
@@ -22,6 +23,12 @@ def category(request):
         user_categories = Category.objects.filter(user=request.META['user'])
         all_categories = static_categories.union(user_categories)
         response_object = json.loads(serialize("json", all_categories))
+
+        for index in range(len(response_object)):
+            record = response_object[index]['fields']
+            record['id'] = response_object[index]['pk']
+            response_object[index] = record
+
         return JsonResponse(response_object, safe=False)
 
     elif request.method == 'POST':
