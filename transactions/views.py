@@ -18,8 +18,13 @@ def transaction(request):
 
     if request.method == 'GET':
         user_transactions = Transaction.objects.filter(user=request.META['user'])
-        response_object = json.loads(serialize("json", user_transactions))
-        return JsonResponse(response_object, safe=False)
+
+        transactions_as_dict = []
+        
+        for transaction in user_transactions:
+            transactions_as_dict.append(transaction.as_dict)
+
+        return JsonResponse(transactions_as_dict, safe=False)
 
     elif request.method == 'POST':
         category = Category.objects.get(id=request_body['category_id'])

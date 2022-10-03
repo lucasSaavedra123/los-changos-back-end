@@ -26,14 +26,7 @@ def category(request):
         categories_as_dict = []
         
         for category in all_categories:
-            categories_as_dict.append(
-                {
-                    'id': category.id,
-                    'material_ui_icon_name': category.material_ui_icon_name,
-                    'static': category.static,
-                    'name': category.name
-                }
-            )
+            categories_as_dict.append(category.as_dict)
 
         return JsonResponse(categories_as_dict, safe=False)
 

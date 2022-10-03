@@ -14,3 +14,12 @@ class Category(models.Model):
     @property
     def static(self):
         return self.user == None
+
+    @property
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'material_ui_icon_name': self.material_ui_icon_name,
+            'static': self.static,
+            'name': self.name
+        }

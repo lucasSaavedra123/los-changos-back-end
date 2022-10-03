@@ -13,3 +13,13 @@ class Transaction(models.Model):
     value = models.DecimalField(max_digits=11, decimal_places=2, default=0.01, validators=[MinValueValidator(0.01)]) #Up to $100,000,000
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
+
+    @property
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'date': self.date,
+            'category': self.category.as_dict,
+            'value': self.value,
+            'name': self.name
+        }
