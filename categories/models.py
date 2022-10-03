@@ -9,3 +9,8 @@ class Category(models.Model):
     name = models.CharField(max_length=50, null=False, blank=False, default="Categoria Personalizada")
     material_ui_icon_name = models.CharField(max_length=50, default="Paid")
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=None, null=True, blank=True)
+
+
+    @property
+    def static(self):
+        return self.user == None

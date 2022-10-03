@@ -22,14 +22,20 @@ def category(request):
         static_categories = Category.objects.filter(user=None)
         user_categories = Category.objects.filter(user=request.META['user'])
         all_categories = static_categories.union(user_categories)
-        response_object = json.loads(serialize("json", all_categories))
+        
+        categories_as_dict = []
+        
+        for category in all_categories:
+            categories_as_dict.append(
+                {
+                    'id': category.id,
+                    'material_ui_icon_name': category.material_ui_icon_name,
+                    'static': category.static,
+                    'name': category.name
+                }
+            )
 
-        for index in range(len(response_object)):
-            record = response_object[index]['fields']
-            record['id'] = response_object[index]['pk']
-            response_object[index] = record
-
-        return JsonResponse(response_object, safe=False)
+        return JsonResponse(categories_as_dict, safe=False)
 
     elif request.method == 'POST':
         Category.objects.create(
