@@ -20,6 +20,6 @@ class Transaction(models.Model):
             'id': self.id,
             'date': self.date,
             'category': self.category.as_dict,
-            'value': self.value,
+            'value': float(self.value),
             'name': self.name
         }
