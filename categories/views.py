@@ -14,7 +14,7 @@ from categories.models import Category
 
 
 # Create your views here.
-@api_view(['GET', 'POST', 'PATCH'])
+@api_view(['GET', 'POST', 'PATCH', 'DELETE'])
 def category(request):
     request_body = request.META['body']
 
