@@ -41,11 +41,19 @@ def transaction(request):
 
     elif request.method == 'DELETE':
         transaction_instace = Transaction.objects.get(id=request_body['id'])
+        
+        if transaction_instace.user != request.META['user']:
+            return Response(None, status=status.HTTP_403_FORBIDDEN)
+        
         transaction_instace.delete()
         return Response(None, status=status.HTTP_200_OK)
 
     elif request.method == 'PATCH':
         transaction = Transaction.objects.get(id=request_body['id'])
+  
+        if transaction.user != request.META['user']:
+            return Response(None, status=status.HTTP_403_FORBIDDEN)
+
         transaction.name = request_body['name']
         transaction.value = request_body['value']
         transaction.date = request_body['date']
