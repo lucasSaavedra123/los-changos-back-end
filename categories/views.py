@@ -41,6 +41,10 @@ def category(request):
 
     elif request.method == 'PATCH':
         category = Category.objects.get(id=request_body['id'])
+        
+        if category.static:
+            return Response(None, status=status.HTTP_403_FORBIDDEN)
+        
         category.name = request_body['name']
         category.material_ui_icon_name = request_body['material_ui_icon_name']
         category.save()
@@ -49,5 +53,9 @@ def category(request):
 
     elif request.method == 'DELETE':
         category_instance = Category.objects.get(id=request_body['id'])
+  
+        if category_instance.static:
+            return Response(None, status=status.HTTP_403_FORBIDDEN)
+    
         category_instance.delete()
         return Response(None, status=status.HTTP_200_OK)
