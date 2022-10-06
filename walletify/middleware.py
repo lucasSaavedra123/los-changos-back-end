@@ -18,8 +18,11 @@ class CustomFirebaseAuthentication:
     def process_view(self, request, view_func, view_args, view_kwargs):
         if os.environ.get('ENVIRONMENT') == "PROD":
             try:
+                print(request.META.get('HTTP_AUTHORIZATION'))
                 authorization_header = request.META.get('HTTP_AUTHORIZATION')
+                print(authorization_header)
                 token = authorization_header.replace("Bearer ", "")
+                print(token)
                 decoded_token = firebase_admin.auth.verify_id_token(token)
                 request.META['uid'] = decoded_token['user_id']
             except:
