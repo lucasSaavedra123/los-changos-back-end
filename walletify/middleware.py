@@ -18,16 +18,11 @@ class CustomFirebaseAuthentication:
     def process_view(self, request, view_func, view_args, view_kwargs):
         if os.environ.get('ENVIRONMENT') == "PROD":
             try:
-                print(request.META.get('HTTP_AUTHORIZATION'))
                 authorization_header = request.META.get('HTTP_AUTHORIZATION')
-                print(authorization_header)
                 token = authorization_header.replace("Bearer ", "")
-                print(token)
                 decoded_token = auth.verify_id_token(token)
-                print(decoded_token)
                 request.META['uid'] = decoded_token['user_id']
-            except e:
-                print(e)
+            except:
                 return HttpResponse(None, status=401)
         elif os.environ.get('ENVIRONMENT') == "DEV":
             request.META['uid'] = 'randomrandomrandomrandomrand'
