@@ -24,8 +24,10 @@ class CustomFirebaseAuthentication:
                 token = authorization_header.replace("Bearer ", "")
                 print(token)
                 decoded_token = firebase_admin.auth.verify_id_token(token)
+                print(decoded_token)
                 request.META['uid'] = decoded_token['user_id']
-            except:
+            except e:
+                print(e)
                 return HttpResponse(None, status=401)
         elif os.environ.get('ENVIRONMENT') == "DEV":
             request.META['uid'] = 'randomrandomrandomrandomrand'
