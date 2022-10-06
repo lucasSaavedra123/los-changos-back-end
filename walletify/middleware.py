@@ -2,7 +2,7 @@ import json
 import os
 
 from django.http import HttpResponse
-import firebase_admin
+from firebase_admin import auth
 
 from users.models import User
 
@@ -23,7 +23,7 @@ class CustomFirebaseAuthentication:
                 print(authorization_header)
                 token = authorization_header.replace("Bearer ", "")
                 print(token)
-                decoded_token = firebase_admin.auth.verify_id_token(token)
+                decoded_token = auth.verify_id_token(token)
                 print(decoded_token)
                 request.META['uid'] = decoded_token['user_id']
             except e:
