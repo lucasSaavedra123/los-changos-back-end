@@ -28,6 +28,9 @@ class CustomFirebaseAuthentication:
                 return JsonResponse({"message": "Token was not provided"}, status=401)
             except AttributeError:
                 return JsonResponse({"message": "Token was not provided"}, status=401)
+            except Exception as e:
+                print(e)
+                return JsonResponse({"message": "Token was not provided"}, status=500)
 
         return None
 
