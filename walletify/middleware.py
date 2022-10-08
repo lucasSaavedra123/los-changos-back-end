@@ -3,6 +3,7 @@ import os
 
 from django.http import JsonResponse
 from firebase_admin import auth
+from firebase_admin._token_gen import ExpiredIdTokenError
 
 from users.models import User
 
@@ -28,9 +29,8 @@ class CustomFirebaseAuthentication:
                 return JsonResponse({"message": "A valid token was not provided"}, status=401)
             except AttributeError:
                 return JsonResponse({"message": "A valid token was not provided"}, status=401)
-            except Exception as e:
-                print(type(e))
-                return JsonResponse({"message": "A valid token was not provided"}, status=500)
+            except ExpiredIdTokenError:
+                return JsonResponse({"message": "A valid token was not provided"}, status=401)
 
         return None
 
