@@ -16,7 +16,7 @@ class CustomFirebaseAuthentication:
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        if os.environ.get('ENVIRONMENT') == "PROD":
+        if os.environ.get('ENVIRONMENT', "PROD") == "PROD":
             try:
                 authorization_header = request.META.get('HTTP_AUTHORIZATION')
                 token = authorization_header.replace("Bearer ", "")
