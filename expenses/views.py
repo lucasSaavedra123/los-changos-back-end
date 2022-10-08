@@ -20,8 +20,7 @@ def expense(request):
 
     try:
         if request.method == 'GET':
-            user_expenses = Expense.objects.filter(user=request.META['user'])
-
+            user_expenses = Expense.expenses_from_user(request.META['user'])
             expenses_as_dict = []
 
             for expense in user_expenses:
@@ -32,8 +31,8 @@ def expense(request):
         elif request.method == 'POST':
             category = Category.objects.get(id=request_body['category_id'])
 
-            Expense.objects.create(
-                user=request.META['user'],
+            Expense.create_expense_for_user(
+                request.META['user'],
                 value=request_body['value'],
                 category=category,
                 date=request_body['date'],
