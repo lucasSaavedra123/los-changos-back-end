@@ -7,11 +7,11 @@ def populate_static_categories(apps, schema_editor):
     Category = apps.get_model('categories', 'Category')
 
     if Category.objects.filter(user=None).count() == 0:
-        Category.objects.create(name="Impuestos y Servicios", material_ui_icon_name="AccountBalance")
-        Category.objects.create(name="Entretenimiento y Ocio", material_ui_icon_name="Casino")
-        Category.objects.create(name="Hogar y Mercado", material_ui_icon_name="Home")
-        Category.objects.create(name="Buen vivir/Antojos", material_ui_icon_name="EmojiEmotions")
-        Category.objects.create(name="Electrodomesticos", material_ui_icon_name="Kitchen")
+        Category.objects.create(name="impuestos y servicios", material_ui_icon_name="AccountBalance")
+        Category.objects.create(name="entretenimiento y ocio", material_ui_icon_name="Casino")
+        Category.objects.create(name="hogar y mercado", material_ui_icon_name="Home")
+        Category.objects.create(name="buen vivir/antojos", material_ui_icon_name="EmojiEmotions")
+        Category.objects.create(name="electrodomesticos", material_ui_icon_name="Kitchen")
 
 
 class Migration(migrations.Migration):

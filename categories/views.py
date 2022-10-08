@@ -14,7 +14,6 @@ from categories.models import Category
 def category(request):
     request_body = request.META['body']
 
-
     try:
         if request.method == 'GET':
             static_categories = Category.objects.filter(user=None)
@@ -42,10 +41,10 @@ def category(request):
             
             if category.static:
                 return Response(None, status=status.HTTP_403_FORBIDDEN)
-            
+
             category.name = request_body['name']
             category.material_ui_icon_name = request_body['material_ui_icon_name']
-            category.save()
+            category.save(update=True)
 
             return Response(None, status=status.HTTP_200_OK)
 
@@ -59,5 +58,8 @@ def category(request):
             return Response(None, status=status.HTTP_200_OK)
     except KeyError as key_error_exception:
         return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    """
     except:
         return Response({f"Server could not have handled request. Contact support team."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    """

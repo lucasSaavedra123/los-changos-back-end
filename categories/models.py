@@ -7,9 +7,9 @@ from users.models import User
 # Create your models here.
 class Category(models.Model):
     id=models.AutoField(primary_key=True)
-    name = models.CharField(max_length=50, null=False, blank=False, default="Categoria Personalizada")
-    material_ui_icon_name = models.CharField(max_length=50, default="Paid")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, default=None, null=True, blank=True)
+    name = models.CharField(max_length=50, null=False, blank=False, default="Categoria Personalizada", editable=True)
+    material_ui_icon_name = models.CharField(max_length=50, default="Paid", editable=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=None, null=True, blank=True, editable=True)
 
     @classmethod
     def static_categories(cls):
@@ -38,12 +38,13 @@ class Category(models.Model):
             'name': self.name
         }
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, update=False, **kwargs):
         self.name = self.name.lower()
         user_categories = Category.categories_from_user(self.user)
-
-        for category in user_categories:
-            if category.name == self.name:
-                raise ValidationError("User cannot create another repeated category")
+        
+        if not update:
+            for category in user_categories:
+                if category.name == self.name:
+                    raise ValidationError("User cannot create another repeated category")
         
         super(Category, self).save(*args, **kwargs)
