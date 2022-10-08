@@ -47,4 +47,5 @@ class Category(models.Model):
                 if category.name == self.name:
                     raise ValidationError("User cannot create another repeated category")
         
+        self.full_clean()
         super(Category, self).save(*args, **kwargs)
