@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Transaction',
+            name='Expense',
             fields=[
                 ('id', models.AutoField(primary_key=True, serialize=False)),
                 ('date', models.DateField()),

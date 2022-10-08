@@ -27,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-j3r3l#6wm1-dh-e(torhql7mkcw+&y3q+wp*0^*m8asguklxzy'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'users.apps.UsersConfig',
-    'transactions.apps.TransactionsConfig',
+    'expenses.apps.ExpensesConfig',
     'categories.apps.CategoriesConfig',
 ]
 
