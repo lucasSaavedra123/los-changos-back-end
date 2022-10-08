@@ -12,6 +12,8 @@ from .models import Expense
 import json
 
 # Create your views here.
+
+
 @api_view(['GET', 'POST', 'DELETE', 'PATCH'])
 def expense(request):
     request_body = request.META['body']
@@ -21,7 +23,7 @@ def expense(request):
             user_expenses = Expense.objects.filter(user=request.META['user'])
 
             expenses_as_dict = []
-            
+
             for expense in user_expenses:
                 expenses_as_dict.append(expense.as_dict)
 
@@ -42,10 +44,10 @@ def expense(request):
 
         elif request.method == 'DELETE':
             expense_instace = Expense.objects.get(id=request_body['id'])
-            
+
             if expense_instace.user != request.META['user']:
                 return Response(None, status=status.HTTP_403_FORBIDDEN)
-            
+
             expense_instace.delete()
             return Response(None, status=status.HTTP_200_OK)
 
@@ -58,7 +60,8 @@ def expense(request):
             expense.name = request_body['name']
             expense.value = request_body['value']
             expense.date = request_body['date']
-            expense.category=Category.objects.get(id=request_body['category_id'])
+            expense.category = Category.objects.get(
+                id=request_body['category_id'])
 
             expense.save()
 

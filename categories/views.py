@@ -17,11 +17,12 @@ def category(request):
     try:
         if request.method == 'GET':
             static_categories = Category.objects.filter(user=None)
-            user_categories = Category.objects.filter(user=request.META['user'])
+            user_categories = Category.objects.filter(
+                user=request.META['user'])
             all_categories = static_categories.union(user_categories)
-            
+
             categories_as_dict = []
-            
+
             for category in all_categories:
                 categories_as_dict.append(category.as_dict)
 
@@ -38,7 +39,7 @@ def category(request):
 
         elif request.method == 'PATCH':
             category = Category.objects.get(id=request_body['id'])
-            
+
             if category.static or category.user != request.META['user']:
                 return Response(None, status=status.HTTP_403_FORBIDDEN)
 
@@ -50,10 +51,10 @@ def category(request):
 
         elif request.method == 'DELETE':
             category_instance = Category.objects.get(id=request_body['id'])
-    
+
             if category_instance.static or category_instance.user != request.META['user']:
                 return Response(None, status=status.HTTP_403_FORBIDDEN)
-        
+
             category_instance.delete()
             return Response(None, status=status.HTTP_200_OK)
     except KeyError as key_error_exception:
