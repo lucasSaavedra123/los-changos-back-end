@@ -39,7 +39,7 @@ def category(request):
         elif request.method == 'PATCH':
             category = Category.objects.get(id=request_body['id'])
             
-            if category.static:
+            if category.static or category.user != request.META['user']:
                 return Response(None, status=status.HTTP_403_FORBIDDEN)
 
             category.name = request_body['name']
@@ -51,7 +51,7 @@ def category(request):
         elif request.method == 'DELETE':
             category_instance = Category.objects.get(id=request_body['id'])
     
-            if category_instance.static:
+            if category_instance.static or category_instance.user != request.META['user']:
                 return Response(None, status=status.HTTP_403_FORBIDDEN)
         
             category_instance.delete()
