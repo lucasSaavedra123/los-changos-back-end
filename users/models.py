@@ -1,8 +1,6 @@
 from django.db import models
 from django.core.validators import MinLengthValidator
 
-from users.validators import FirebaseUIDValidator
-
 
 # Create your models here.
 class User(models.Model):
