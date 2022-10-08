@@ -23,7 +23,7 @@ class CustomFirebaseAuthentication:
                 decoded_token = auth.verify_id_token(token)
                 request.META['uid'] = decoded_token['user_id']
             except:
-                return HttpResponse(None, status=401)
+                return HttpResponse({"message": "Token was not provided"}, status=401)
         elif os.environ.get('ENVIRONMENT') == "DEV":
             request.META['uid'] = 'randomrandomrandomrandomrand'
 
