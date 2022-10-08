@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 
 from users.models import User
 
@@ -10,6 +11,19 @@ class Category(models.Model):
     material_ui_icon_name = models.CharField(max_length=50, default="Paid")
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=None, null=True, blank=True)
 
+    @classmethod
+    def static_categories(cls):
+        return cls.objects.filter(user=None)
+
+    @classmethod
+    def create_category_for_user(cls, user, **kwargs):
+        cls.objects.create(user=user, **kwargs)
+
+    @classmethod
+    def categories_from_user(cls, user):
+        static_categories = cls.static_categories()
+        user_created_categories = cls.objects.filter(user=user)
+        return static_categories.union(user_created_categories)
 
     @property
     def static(self):
@@ -23,3 +37,13 @@ class Category(models.Model):
             'static': self.static,
             'name': self.name
         }
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.lower()
+        user_categories = Category.categories_from_user(self.user)
+
+        for category in user_categories:
+            if category.name == self.name:
+                raise ValidationError("User cannot create another repeated category")
+        
+        super(Category, self).save(*args, **kwargs)
