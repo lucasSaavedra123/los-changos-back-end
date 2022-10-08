@@ -25,12 +25,12 @@ class CustomFirebaseAuthentication:
                 decoded_token = auth.verify_id_token(token)
                 request.META['uid'] = decoded_token['user_id']
             except KeyError:
-                return JsonResponse({"message": "Token was not provided"}, status=401)
+                return JsonResponse({"message": "A valid token was not provided"}, status=401)
             except AttributeError:
-                return JsonResponse({"message": "Token was not provided"}, status=401)
+                return JsonResponse({"message": "A valid token was not provided"}, status=401)
             except Exception as e:
-                print(e)
-                return JsonResponse({"message": "Token was not provided"}, status=500)
+                print(type(e))
+                return JsonResponse({"message": "A valid token was not provided"}, status=500)
 
         return None
 
