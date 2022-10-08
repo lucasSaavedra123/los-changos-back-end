@@ -111,7 +111,7 @@ elif os.environ.get('DATABASE') == "POSTGRES":
             'PORT': os.environ.get('DB_PORT'),
             'USER': os.environ.get('DB_USER'),
             'PASSWORD': os.environ.get('DB_PASSWORD'),
-            #'OPTIONS': {'ssl': {'ca': os.environ.get('MYSQL_ATTR_SSL_CA')}}
+            # 'OPTIONS': {'ssl': {'ca': os.environ.get('MYSQL_ATTR_SSL_CA')}}
         }
     }
 
@@ -155,18 +155,18 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-#Create .json file
+# Create .json file
 FIREBASE_CONFIG_JSON = {
-  "type": os.environ.get('FIREBASE_TYPE'),
-  "project_id": os.environ.get('FIREBASE_TYPE_PROJECT_ID'),
-  "private_key_id": os.environ.get('FIREBASE_PRIVATE_KEY_ID'),
-  "private_key": os.environ.get('FIREBASE_PRIVATE_KEY_KEY').replace('\\n', '\n'),
-  "client_email": os.environ.get('FIREBASE_CLIENT_EMAIL'),
-  "client_id": os.environ.get('FIREBASE_CLIENT_ID'),
-  "auth_uri": os.environ.get('FIREBASE_AUTH_URI'),
-  "token_uri": os.environ.get('FIREBASE_TOKEN_URI'),
-  "auth_provider_x509_cert_url": os.environ.get('FIREBASE_AUTH_PROVIDER_X509_CERT_URL'),
-  "client_x509_cert_url": os.environ.get('FIREBASE_CLIENT_X509_CERT_URL')
+    "type": os.environ.get('FIREBASE_TYPE'),
+    "project_id": os.environ.get('FIREBASE_TYPE_PROJECT_ID'),
+    "private_key_id": os.environ.get('FIREBASE_PRIVATE_KEY_ID'),
+    "private_key": os.environ.get('FIREBASE_PRIVATE_KEY_KEY').replace('\\n', '\n'),
+    "client_email": os.environ.get('FIREBASE_CLIENT_EMAIL'),
+    "client_id": os.environ.get('FIREBASE_CLIENT_ID'),
+    "auth_uri": os.environ.get('FIREBASE_AUTH_URI'),
+    "token_uri": os.environ.get('FIREBASE_TOKEN_URI'),
+    "auth_provider_x509_cert_url": os.environ.get('FIREBASE_AUTH_PROVIDER_X509_CERT_URL'),
+    "client_x509_cert_url": os.environ.get('FIREBASE_CLIENT_X509_CERT_URL')
 }
 
 with open('firebase-config.json', 'w') as file:

@@ -173,7 +173,11 @@ class TestExponsesView(APITestCase):
             'id': 1,
             'value': 87444.0,
             'date': '2020-02-05',
-            'category': {'id': 1, 'material_ui_icon_name': 'AccountBalance', 'name': 'impuestos y servicios', 'static': True},
+            'category': {
+                'id': 1,
+                'material_ui_icon_name': 'AccountBalance',
+                'name': 'impuestos y servicios',
+                'static': True},
             'name': "Modified Expense"
         }
 
@@ -203,7 +207,12 @@ class TestExponsesView(APITestCase):
             'id': 1,
             'value': 250.5,
             'date': '2021-01-30',
-            'category': {'id': 1, 'material_ui_icon_name': 'AccountBalance', 'name': 'impuestos y servicios', 'static': True},
+            'category': {
+                'id': 1,
+                'material_ui_icon_name': 'AccountBalance',
+                'name': 'impuestos y servicios',
+                'static': True
+            },
             'name': "Another expense"
         }
 
