@@ -16,7 +16,9 @@ class CustomFirebaseAuthentication:
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        if os.environ.get('ENVIRONMENT', "PROD") == "PROD":
+        if os.environ.get('ENVIRONMENT') == "DEV":
+            request.META['uid'] = 'randomrandomrandomrandomrand'
+        else:
             try:
                 authorization_header = request.META.get('HTTP_AUTHORIZATION')
                 token = authorization_header.replace("Bearer ", "")
@@ -24,9 +26,6 @@ class CustomFirebaseAuthentication:
                 request.META['uid'] = decoded_token['user_id']
             except:
                 return JsonResponse({"message": "Token was not provided"}, status=401)
-        elif os.environ.get('ENVIRONMENT') == "DEV":
-            request.META['uid'] = 'randomrandomrandomrandomrand'
-
         return None
 
 class CustomUserCreation:
