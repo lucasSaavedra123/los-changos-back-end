@@ -1,16 +1,15 @@
 import os
-from sre_constants import CATEGORY
-from venv import create
 
 from django.test import TestCase
-from categories.models import Category
+from django.urls import reverse
+from django.core.exceptions import ValidationError
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
-from django.urls import reverse
+
+from categories.models import Category
 from users.constants import FIREBASE_UID_LENGTH
 from utils import create_random_string
 from users.models import User
-from django.core.exceptions import ValidationError
 
 
 # Create your tests here.
