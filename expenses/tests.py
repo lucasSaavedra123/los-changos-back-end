@@ -48,7 +48,7 @@ class TestExpensesModel(TestCase):
             Expense.objects.create(
                 user=self.a_user,
                 value=-58.25,
-                date='2988-01-01',
+                date='2015-01-01',
                 category=self.category_for_expense,
                 name="Custom Expense"
             )

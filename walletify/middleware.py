@@ -24,9 +24,13 @@ class CustomFirebaseAuthentication:
                 token = authorization_header.replace("Bearer ", "")
                 decoded_token = auth.verify_id_token(token)
                 request.META['uid'] = decoded_token['user_id']
-            except:
+            except KeyError:
                 return JsonResponse({"message": "Token was not provided"}, status=401)
+            except AttributeError:
+                return JsonResponse({"message": "Token was not provided"}, status=401)
+
         return None
+
 
 class CustomUserCreation:
     def __init__(self, get_response):
@@ -44,6 +48,7 @@ class CustomUserCreation:
         request.META['user'] = User.objects.get(firebase_uid=request.META['uid'])
 
         return None
+
 
 class SanitizeRequest:
     def __init__(self, get_response):
