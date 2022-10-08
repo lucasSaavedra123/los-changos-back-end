@@ -13,6 +13,17 @@ env:
   DB_USER: walletify
   DB_PORT: 8080
   MYSQL_ATTR_SSL_CA: /etc/ssl/cert.pem
+  ENVIRONMENT: DEV
+  FIREBASE_TYPE: ${{ secrets.FIREBASE_TYPE }}
+  FIREBASE_TYPE_PROJECT_ID: ${{ secrets.FIREBASE_TYPE_PROJECT_ID }}-4b649
+  FIREBASE_PRIVATE_KEY_ID: ${{ secrets.FIREBASE_PRIVATE_KEY_ID }}
+  FIREBASE_PRIVATE_KEY_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY_KEY }}
+  FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+  FIREBASE_CLIENT_ID: ${{ secrets.FIREBASE_CLIENT_ID }}
+  FIREBASE_AUTH_URI: ${{ secrets.FIREBASE_AUTH_URI }}
+  FIREBASE_TOKEN_URI: ${{ secrets.FIREBASE_TOKEN_URI }}
+  FIREBASE_AUTH_PROVIDER_X509_CERT_URL: ${{ secrets.FIREBASE_AUTH_PROVIDER_X509_CERT_URL }}
+  FIREBASE_CLIENT_X509_CERT_URL: ${{ secrets.FIREBASE_CLIENT_X509_CERT_URL }}
 
 jobs:
   build:
@@ -21,13 +32,13 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.9]
+        python-version: [3.9.14]
 
     steps:
     - uses: actions/checkout@v3
-    - name: Run MySQL Server
+    - name: Run Postgres Server
       run: |
-        docker run -e MYSQL_PASSWORD=$DB_PASSWORD -e MYSQL_USER=$DB_USER -e MYSQL_DATABASE=$DB_NAME -p 8080:8080 -d mysql:8.0.30
+        docker run -e POSTGRES_PASSWORD=$DB_PASSWORD -e POSTGRES_USER=$DB_USER -e POSTGRES_DB=$DB_NAME -p 8080:8080 -d postgres:14.5
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
@@ -45,5 +56,5 @@ jobs:
       env: 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        coverage run --source='walletify' manage.py test
+        coverage run --source='.' manage.py test
         coveralls --service=github

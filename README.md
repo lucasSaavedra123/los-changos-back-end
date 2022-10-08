@@ -39,7 +39,7 @@ Create the environment:
 
 Activate it:
 
-    source walletify-env/bin/activate #Linux
+    source walletify-env/Scripts/activate #Linux
     ./walletify-env/Scripts/activate.ps1 #PowerShell (Windows)
 
 Finally, install the required modules:
