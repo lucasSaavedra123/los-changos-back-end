@@ -51,7 +51,7 @@ def expense(request):
 
         elif request.method == 'PATCH':
             expense = Expense.objects.get(id=request_body['id'])
-    
+
             if expense.user != request.META['user']:
                 return Response(None, status=status.HTTP_403_FORBIDDEN)
 
@@ -63,5 +63,9 @@ def expense(request):
             expense.save()
 
             return Response(None, status=status.HTTP_200_OK)
+    except KeyError as key_error_exception:
+        return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)
+    """
     except:
         return Response({"message": "Server could not have handled request. Contact support team."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    """

@@ -62,6 +62,194 @@ class TestExpensesModel(TestCase):
                 'date':'2022-05-12'
             })
 
-class TestExpensesView(APITestCase):
+
+class TestExponsesView(APITestCase):
     def setUp(self):
-        pass
+        self.endpoint = '/expense'
+
+    def test_user_creates_expenses(self):
+        response = self.client.post(self.endpoint, {
+            'value':250.5,
+            'date':'2022-05-12',
+            'category_id':2,
+            'name':"Last Expense of the month"
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_user_delete_created_expense(self):
+        response = self.client.post(self.endpoint, {
+            'value':250.5,
+            'date':'2021-01-30',
+            'category_id':3,
+            'name':"Another expense"
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.delete(self.endpoint, {'id': '1'}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = self.client.get(self.endpoint)
+
+        self.assertEqual(response.json(), [])
+
+    def test_user_cannot_delete_another_user_expense(self):
+        another_user = User.objects.create(firebase_uid=create_random_string(FIREBASE_UID_LENGTH))
+        
+        Expense.create_expense_for_user(another_user, name='Random expense', date='2019-01-30', value=100, category=Category.objects.all()[1])
+
+        response = self.client.delete(self.endpoint, {'id': '1'}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_user_cannot_modify_another_user_expense(self):
+        another_user = User.objects.create(firebase_uid=create_random_string(FIREBASE_UID_LENGTH))
+        
+        Expense.create_expense_for_user(another_user, name='Random expense', date='2019-01-30', value=100, category=Category.objects.all()[1])
+
+        response = self.client.patch(self.endpoint, {
+            'id': 1,
+            'value':100,
+            'date':'2021-01-30',
+            'category_id':1,
+            'name':"Another expense"
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_user_reads_expenses(self):
+        response = self.client.post(self.endpoint, {
+            'value':59999,
+            'date':'2021-03-25',
+            'category_id':2,
+            'name':"Expensive Expense"
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.get(self.endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        expected_response = {
+                'id': 1,
+                'value': 59999.0,
+                'date': '2021-03-25',
+                'category': {'id': 2, 'material_ui_icon_name': 'Casino', 'name': 'entretenimiento y ocio', 'static': True},
+                'name': 'Expensive Expense'
+            }
+
+        self.assertDictEqual(response.json()[0], expected_response)
+
+    def test_user_update_all_information_related_to_category_expense(self):
+        self.client.post(self.endpoint, {
+            'value':250.5,
+            'date':'2021-01-30',
+            'category_id':3,
+            'name':"Another expense"
+        }, format='json')
+
+        self.client.patch(self.endpoint, {
+            'id': 1,
+            'value':87444,
+            'date':'2020-02-05',
+            'category_id':1,
+            'name':"Modified Expense"
+        }, format='json')
+
+        response = self.client.get(self.endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        expected_response = {
+            'id': 1,
+            'value':87444.0,
+            'date':'2020-02-05',
+            'category':{'id': 1,'material_ui_icon_name': 'AccountBalance','name': 'impuestos y servicios', 'static': True},
+            'name':"Modified Expense"
+        }
+
+        self.assertDictEqual(response.json()[0], expected_response)
+
+    def test_user_update_only_category_of_created_expense(self):
+        self.client.post(self.endpoint, {
+            'value':250.5,
+            'date':'2021-01-30',
+            'category_id':3,
+            'name':"Another expense"
+        }, format='json')
+
+        self.client.patch(self.endpoint, {
+            'id': 1,
+            'value':250.5,
+            'date':'2021-01-30',
+            'category_id':1,
+            'name':"Another expense"
+        }, format='json')
+
+        response = self.client.get(self.endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        expected_response = {
+            'id': 1,
+            'value':250.5,
+            'date':'2021-01-30',
+            'category':{'id': 1,'material_ui_icon_name': 'AccountBalance','name': 'impuestos y servicios', 'static': True},
+            'name':"Another expense"
+        }
+
+        self.assertDictEqual(response.json()[0], expected_response)
+
+    def test_user_forgots_to_include_field_in_create_request(self):
+        response = self.client.post(self.endpoint, {
+            'date':'2021-01-30',
+            'category_id':3,
+            'name':"Another expense"
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_user_forgots_to_include_field_in_patch_request(self):
+        response = self.client.patch(self.endpoint, {
+            'value':250.5,
+            'date':'2021-01-30'
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_user_has_no_provide_valid_token_to_read_expenses(self):
+        os.environ["ENVIRONMENT"] = "PROD"
+        response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        os.environ["ENVIRONMENT"] = "DEV"
+
+    def test_user_has_no_provide_valid_token_to_add_expense(self):
+        os.environ["ENVIRONMENT"] = "PROD"
+        response = self.client.post(self.endpoint, {
+            'value':250.5,
+            'date':'2021-01-30',
+            'category_id':3,
+            'name':"Another expense"
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        os.environ["ENVIRONMENT"] = "DEV"
+
+    def test_user_has_no_provide_valid_token_to_patch_expense(self):
+        os.environ["ENVIRONMENT"] = "PROD"
+        response = self.client.patch(self.endpoint, {
+            'id': 1444,
+            'value':250.5,
+            'date':'2021-01-30',
+            'category_id':3,
+            'name':"Another expense"
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        os.environ["ENVIRONMENT"] = "DEV"
+
+    def test_user_has_no_provide_valid_token_to_delete_expensey(self):
+        os.environ["ENVIRONMENT"] = "PROD"
+        response = self.client.delete(self.endpoint, {'id': 777}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        os.environ["ENVIRONMENT"] = "DEV"
