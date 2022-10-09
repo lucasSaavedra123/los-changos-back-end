@@ -51,7 +51,7 @@ class Category(models.Model):
             'id': self.id,
             'material_ui_icon_name': self.material_ui_icon_name,
             'static': self.static,
-            'name': self.name
+            'name': self.name.title()
         }
 
     def save(self, *args, update=False, **kwargs):

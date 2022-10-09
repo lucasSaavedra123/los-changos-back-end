@@ -143,7 +143,7 @@ class TestExponsesView(APITestCase):
             'id': 1,
             'value': 59999.0,
             'date': '2021-03-25',
-            'category': {'id': 2, 'material_ui_icon_name': 'Casino', 'name': 'entretenimiento y ocio', 'static': True},
+            'category': {'id': 2, 'material_ui_icon_name': 'Casino', 'name': 'Entretenimiento Y Ocio', 'static': True},
             'name': 'Expensive Expense'
         }
 
@@ -176,7 +176,7 @@ class TestExponsesView(APITestCase):
             'category': {
                 'id': 1,
                 'material_ui_icon_name': 'AccountBalance',
-                'name': 'impuestos y servicios',
+                'name': 'Impuestos Y Servicios',
                 'static': True},
             'name': "Modified Expense"
         }
@@ -210,7 +210,7 @@ class TestExponsesView(APITestCase):
             'category': {
                 'id': 1,
                 'material_ui_icon_name': 'AccountBalance',
-                'name': 'impuestos y servicios',
+                'name': 'Impuestos Y Servicios',
                 'static': True
             },
             'name': "Another expense"
