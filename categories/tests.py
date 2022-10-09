@@ -34,12 +34,12 @@ class TestCategoriesModel(TestCase):
     def test_two_categories_with_same_name_should_not_be_created_for_a_user(self):
         with self.assertRaises(ValidationError):
             Category.objects.create(
-                user=self.a_user, name='eDucatioN', material_ui_icon_name='Car')
+                user=self.a_user, name='Education', material_ui_icon_name='Car')
 
     def test_category_dictionary_serialization(self):
         self.assertDictEqual(self.category_created.as_dict, {
             'id': self.category_created.id,
-            'name': 'education',
+            'name': 'Education',
             'material_ui_icon_name': 'School',
             'static': False
         })
@@ -50,15 +50,15 @@ class TestCategoriesView(APITestCase):
         self.endpoint = '/category'
         self.static_categories_as_dict = [
             {'id': 1, 'material_ui_icon_name': 'AccountBalance',
-                'static': True, 'name': 'impuestos y servicios'},
+                'static': True, 'name': 'Impuestos Y Servicios'},
             {'id': 2, 'material_ui_icon_name': 'Casino',
-                'static': True, 'name': 'entretenimiento y ocio'},
+                'static': True, 'name': 'Entretenimiento Y Ocio'},
             {'id': 3, 'material_ui_icon_name': 'Home',
-                'static': True, 'name': 'hogar y mercado'},
+                'static': True, 'name': 'Hogar Y Mercado'},
             {'id': 4, 'material_ui_icon_name': 'EmojiEmotions',
-                'static': True, 'name': 'buen vivir/antojos'},
+                'static': True, 'name': 'Buen Vivir/Antojos'},
             {'id': 5, 'material_ui_icon_name': 'Kitchen',
-                'static': True, 'name': 'electrodomesticos'}
+                'static': True, 'name': 'Electrodomesticos'}
         ]
 
     def test_user_creates_categories(self):
@@ -121,7 +121,7 @@ class TestCategoriesView(APITestCase):
 
         expected_response = self.static_categories_as_dict + \
             [{'id': 6, 'material_ui_icon_name': 'BorderColor',
-                'static': False, 'name': 'custom category'}]
+                'static': False, 'name': 'Custom Category'}]
 
         self.assertEqual(response.json(), expected_response)
 
@@ -143,7 +143,7 @@ class TestCategoriesView(APITestCase):
 
         expected_response = self.static_categories_as_dict + \
             [{'id': 6, 'material_ui_icon_name': 'Bolt',
-                'static': False, 'name': 'energy'}]
+                'static': False, 'name': 'Energy'}]
 
         self.assertEqual(response.json(), expected_response)
 
@@ -165,7 +165,7 @@ class TestCategoriesView(APITestCase):
 
         expected_response = self.static_categories_as_dict + \
             [{'id': 6, 'material_ui_icon_name': 'BorderColor',
-                'static': False, 'name': 'another category name'}]
+                'static': False, 'name': 'Another Category Name'}]
 
         self.assertEqual(response.json(), expected_response)
 
@@ -191,7 +191,7 @@ class TestCategoriesView(APITestCase):
 
         expected_response = self.static_categories_as_dict + \
             [{'id': 6, 'material_ui_icon_name': 'Bolt',
-                'static': False, 'name': 'custom category'}]
+                'static': False, 'name': 'Custom Category'}]
 
         self.assertEqual(response.json(), expected_response)
 
