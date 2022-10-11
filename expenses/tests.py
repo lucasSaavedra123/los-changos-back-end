@@ -377,6 +377,139 @@ class TestExponsesView(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_user_reads_expense_from_a_specific_time_line(self):
+        self.client.post(self.endpoint, {
+            'value': 10599,
+            'date': '2021-06-20',
+            'category_id': 1,
+            'name': "Another expense"
+        }, format='json')
+
+        self.client.post(self.endpoint, {
+            'value': 123456,
+            'date': '2022-06-02',
+            'category_id': 3,
+            'name': "Another expense"
+        }, format='json')
+
+        response = self.client.post(self.endpoint + "/filter", {
+            "timeline": ["2022-06-02", "2022-06-02"]
+        }, format='json')
+
+        self.assertDictEqual(response.json()[0], {
+            'id': 2,
+            "value": 123456,
+            'date': '2022-06-02',
+            'category': {
+                'id': 3,
+                'material_ui_icon_name': 'Home',
+                'name': 'Hogar Y Mercado',
+                'static': True
+            },
+            "name":'Another expense'
+        })
+
+    def test_user_reads_expenses_within_extended_time_line(self):
+        self.client.post(self.endpoint, {
+            'value': 10599,
+            'date': '2021-05-20',
+            'category_id': 1,
+            'name': "Very old expense"
+        }, format='json')
+
+        self.client.post(self.endpoint, {
+            'value': 123456,
+            'date': '2022-06-02',
+            'category_id': 3,
+            'name': "Another expense"
+        }, format='json')
+
+        response = self.client.post(self.endpoint + "/filter", {
+            "timeline": ["2021-01-01", "2023-01-01"]
+        }, format='json')
+
+        self.assertDictEqual(response.json()[0], {
+            "id": 1,
+            "value": 10599.0,
+            'date': '2021-05-20',
+            'category': {
+                'id': 1,
+                'material_ui_icon_name': 'AccountBalance',
+                'name': 'Impuestos Y Servicios',
+                'static': True
+            },
+            "name":'Very old expense'
+        })    
+
+        self.assertDictEqual(response.json()[1], {
+            "id": 2,
+            "value": 123456.0,
+            'date': '2022-06-02',
+            'category': {
+                'id': 3,
+                'material_ui_icon_name': 'Home',
+                'name': 'Hogar Y Mercado',
+                'static': True
+            },
+            "name":'Another expense'
+        })        
+
+    def test_user_reads_expenses_within_extended_time_line_of_a_specific_category(self):
+        self.client.post(self.endpoint, {
+            'value': 10599,
+            'date': '2021-05-20',
+            'category_id': 1,
+            'name': "Very old expense"
+        }, format='json')
+
+        self.client.post(self.endpoint, {
+            'value': 10599,
+            'date': '2021-12-30',
+            'category_id': 1,
+            'name': "Same category very old expense"
+        }, format='json')
+
+        self.client.post(self.endpoint, {
+            'value': 123456,
+            'date': '2022-06-02',
+            'category_id': 3,
+            'name': "Another expense"
+        }, format='json')
+
+        response = self.client.post(self.endpoint + "/filter", {
+            "timeline": ["2021-01-01", "2023-01-01"],
+            "category_id": 1
+        }, format='json')
+
+        self.assertEqual(len(response.json()), 2)
+
+        self.assertDictEqual(response.json()[0], {
+            "id": 1,
+            "value": 10599.0,
+            'date': '2021-05-20',
+            'category': {
+                'id': 1,
+                'material_ui_icon_name': 'AccountBalance',
+                'name': 'Impuestos Y Servicios',
+                'static': True
+            },
+            "name":'Very old expense'
+        })
+
+        self.assertDictEqual(response.json()[1], {
+            "id": 2,
+            "value": 10599,
+            'date': '2021-12-30',
+            'category': {
+                'id': 1,
+                'material_ui_icon_name': 'AccountBalance',
+                'name': 'Impuestos Y Servicios',
+                'static': True
+            },
+            "name":'Same category very old expense'
+        })       
+
+
     def test_user_has_no_provide_valid_token_to_read_expenses(self):
         os.environ["ENVIRONMENT"] = "PROD"
         response = self.client.get(self.endpoint)
