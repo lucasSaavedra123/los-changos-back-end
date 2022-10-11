@@ -11,6 +11,7 @@ from users.models import User
 from utils import create_random_string
 from users.constants import FIREBASE_UID_LENGTH
 from .models import Expense
+from datetime import date
 
 
 # Create your tests here.
@@ -19,6 +20,7 @@ class TestExpensesModel(TestCase):
         self.a_user = User.objects.create(
             firebase_uid=create_random_string(FIREBASE_UID_LENGTH))
         self.category_for_expense = Category.objects.all()[0]
+        self.another_category = Category.objects.all()[1]
         self.expense_created = Expense.objects.create(
             user=self.a_user,
             value=250.5,
@@ -54,7 +56,7 @@ class TestExpensesModel(TestCase):
                 name="Custom Expense"
             )
 
-    def test_category_dictionary_serialization(self):
+    def test_expense_dictionary_serialization(self):
         self.assertDictEqual(self.expense_created.as_dict, {
             'id': self.expense_created.id,
             'value': 250.5,
@@ -62,6 +64,77 @@ class TestExpensesModel(TestCase):
             'name': "Custom Expense",
             'date': '2022-05-12'
         })
+
+    def test_expense_from_one_date_is_obtained(self):
+        a_date = date(2022, 5, 12)
+        filtered_expenses = Expense.filter_within_timeline_from_user(self.a_user, a_date, a_date)
+
+        self.assertEqual(len(filtered_expenses), 1)
+        self.assertEqual(filtered_expenses[0], self.expense_created)
+
+    def test_expenses_from_one_date_are_obtained(self):
+        self.another_expense_created = Expense.objects.create(
+            user=self.a_user,
+            value=240,
+            date='2022-05-12',
+            category=self.category_for_expense,
+            name="Another custom expense"
+        )
+
+        a_date = date(2022, 5, 12)
+        filtered_expenses = Expense.filter_within_timeline_from_user(self.a_user, a_date, a_date)
+
+        self.assertEqual(len(filtered_expenses), 2)
+        self.assertEqual(filtered_expenses[0], self.expense_created)
+        self.assertEqual(filtered_expenses[1], self.another_expense_created)
+
+    def test_expenses_with_extended_timeline_are_filtered(self):
+        another_expense_created = Expense.objects.create(
+            user=self.a_user,
+            value=240,
+            date='2022-05-12',
+            category=self.category_for_expense,
+            name="Another custom expense"
+        )
+
+        Expense.objects.create(
+            user=self.a_user,
+            value=240,
+            date='2022-01-10',
+            category=self.category_for_expense,
+            name="Old Expense"
+        )
+
+        a_date = date(2022, 5, 12)
+        filtered_expenses = Expense.filter_within_timeline_from_user(self.a_user, a_date, a_date)
+
+        self.assertEqual(len(filtered_expenses), 2)
+        self.assertEqual(filtered_expenses[0], self.expense_created)
+        self.assertEqual(filtered_expenses[1], another_expense_created)
+
+    def test_expenses_with_extended_timeline_are_filtered(self):
+        another_expense_created = Expense.objects.create(
+            user=self.a_user,
+            value=240,
+            date='2022-04-10',
+            category=self.category_for_expense,
+            name="Another custom expense"
+        )
+
+        old_expense = Expense.objects.create(
+            user=self.a_user,
+            value=240,
+            date='2021-01-10',
+            category=self.category_for_expense,
+            name="Old Expense"
+        )
+
+        filtered_expenses = Expense.filter_within_timeline_from_user(self.a_user, date(2021, 1, 1), date(2022, 6, 1))
+
+        self.assertEqual(len(filtered_expenses), 3)
+        self.assertEqual(filtered_expenses[0], self.expense_created)
+        self.assertEqual(filtered_expenses[1], another_expense_created)
+        self.assertEqual(filtered_expenses[1], old_expense)
 
 
 class TestExponsesView(APITestCase):
