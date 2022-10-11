@@ -112,7 +112,7 @@ class TestExpensesModel(TestCase):
         self.assertEqual(filtered_expenses[0], self.expense_created)
         self.assertEqual(filtered_expenses[1], another_expense_created)
 
-    def test_expenses_with_extended_timeline_are_filtered(self):
+    def test_expenses_with_extended_timeline_are_not_filtered(self):
         another_expense_created = Expense.objects.create(
             user=self.a_user,
             value=240,
