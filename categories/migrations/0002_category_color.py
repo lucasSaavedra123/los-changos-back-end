@@ -2,6 +2,8 @@
 
 from django.db import migrations, models
 
+from utils import create_random_color_string
+
 def update_categories_color(apps, schema_editor):
     Category = apps.get_model('categories', 'Category')
 
@@ -13,10 +15,16 @@ def update_categories_color(apps, schema_editor):
         5: "rgba(255,0,255,0.2)"
     }
 
-    for category_id in range(1, 6):
-        category = Category.objects.get(id=category_id)
-        category.color = colors[category_id]
+    for category in Category.objects.all():
+        if category.color is None:
+            if category.id in colors:
+                category = Category.objects.get(id=category.id)
+                category.color = colors[category.id]
+            else:
+                category.color = create_random_color_string()
+
         category.save()
+
 
 
 class Migration(migrations.Migration):
