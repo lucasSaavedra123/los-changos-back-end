@@ -72,6 +72,7 @@ def expense(request):
 @api_view(['POST'])
 def expense_filter(request):
     request_body = request.META['body']
+    print(request_body)
 
     try:
         response = []
@@ -82,7 +83,7 @@ def expense_filter(request):
         first_date = [int(string_piece) for string_piece in first_date]
         second_date = [int(string_piece) for string_piece in second_date]
 
-        if "category_id" not in request_body or request_body['category_id'] == []:
+        if "category_id" not in request_body:
             expenses = Expense.filter_within_timeline_from_user(
                 request.META['user'],
                 date(*first_date),
