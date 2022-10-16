@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from datetime import date
 from django.shortcuts import render
 from django.http import JsonResponse
@@ -87,12 +89,25 @@ def expense_filter(request):
                 date(*second_date)
             )
         else:
-            expenses = Expense.filter_by_category_within_timeline_from_user(
-                request.META['user'],
-                date(*first_date),
-                date(*second_date),
-                Category.objects.get(id=request_body['category_id'])
-            )
+
+            if isinstance(request_body['category_id'], Sequence):
+                expenses = Expense.objects.none()
+
+                for category_id in request_body['category_id']:
+                    expenses.union(Expense.filter_by_category_within_timeline_from_user(
+                    request.META['user'],
+                    date(*first_date),
+                    date(*second_date),
+                    Category.objects.get(id=category_id)
+                ))
+
+            else:
+                expenses = Expense.filter_by_category_within_timeline_from_user(
+                    request.META['user'],
+                    date(*first_date),
+                    date(*second_date),
+                    Category.objects.get(id=request_body['category_id'])
+                )
 
         for expense in expenses:
             response.append(expense.as_dict)
