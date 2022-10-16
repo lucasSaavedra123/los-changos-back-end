@@ -72,6 +72,7 @@ def expense(request):
 @api_view(['POST'])
 def expense_filter(request):
     request_body = request.META['body']
+    print(request_body)
 
     try:
         response = []
@@ -89,7 +90,6 @@ def expense_filter(request):
                 date(*second_date)
             )
         else:
-
             if isinstance(request_body['category_id'], Sequence):
                 expenses = Expense.objects.none()
 
