@@ -90,11 +90,13 @@ def expense_filter(request):
                 date(*second_date)
             )
         else:
+            print(isinstance(request_body['category_id'], Sequence))
             if isinstance(request_body['category_id'], Sequence):
                 expenses = Expense.objects.none()
 
                 for category_id in request_body['category_id']:
-                    expenses.union(Expense.filter_by_category_within_timeline_from_user(
+                    print(category_id)
+                    expenses = expenses.union(Expense.filter_by_category_within_timeline_from_user(
                     request.META['user'],
                     date(*first_date),
                     date(*second_date),
