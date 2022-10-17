@@ -33,15 +33,15 @@ class Expense(models.Model):
 
     @classmethod
     def expenses_from_user(cls, user):
-        return cls.objects.filter(user=user)
+        return cls.objects.order_by('date').filter(user=user)
 
     @classmethod
     def filter_within_timeline_from_user(cls, user, first_date, last_date):
-        return cls.objects.filter(user=user, date__gte=first_date, date__lte=last_date)
+        return cls.objects.order_by('date').filter(user=user, date__gte=first_date, date__lte=last_date)
 
     @classmethod
     def filter_by_category_within_timeline_from_user(cls, user, first_date, last_date, selected_category):
-        return cls.objects.filter(user=user, date__gte=first_date, date__lte=last_date, category=selected_category)
+        return cls.objects.order_by('date').filter(user=user, date__gte=first_date, date__lte=last_date, category=selected_category)
 
     @property
     def as_dict(self):
