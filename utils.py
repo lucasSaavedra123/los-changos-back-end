@@ -12,4 +12,4 @@ def create_random_color_string():
     R = random.randint(0,255)
     G = random.randint(0,255)
     B = random.randint(0,255)
-    return f"rgba({R},{G},{B},0.2)"
+    return f"rgba({R},{G},{B},1)"

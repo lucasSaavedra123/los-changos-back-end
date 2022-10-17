@@ -8,11 +8,11 @@ def update_categories_color(apps, schema_editor):
     Category = apps.get_model('categories', 'Category')
 
     colors = {
-        1: "rgba(255,255,255,0.2)",
-        2: "rgba(0,255,0,0.2)",
-        3: "rgba(0,255,124,0.2)",
-        4: "rgba(255,0,0,0.2)",
-        5: "rgba(255,0,255,0.2)"
+        1: "rgba(255,255,255,1)",
+        2: "rgba(0,255,0,1)",
+        3: "rgba(0,255,124,1)",
+        4: "rgba(255,0,0,1)",
+        5: "rgba(255,0,255,1)"
     }
 
     for category in Category.objects.all():
