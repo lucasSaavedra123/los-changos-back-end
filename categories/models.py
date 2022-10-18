@@ -49,7 +49,7 @@ class Category(models.Model):
     def categories_from_user(cls, user):
         static_categories = cls.static_categories()
         user_created_categories = cls.objects.filter(user=user)
-        return static_categories.union(user_created_categories)
+        return static_categories.union(user_created_categories).order_by('id')
 
     @property
     def static(self):
