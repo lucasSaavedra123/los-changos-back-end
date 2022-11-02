@@ -16,11 +16,6 @@ from datetime import date
 
 # Create your tests here.
 class TestExpensesModel(TestCase):
-    def assertActionInSecureEnvironment(self, action):
-        os.environ["ENVIRONMENT"] = "PROD"
-        self.assertEqual(action(self).status_code, status.HTTP_401_UNAUTHORIZED)
-        os.environ["ENVIRONMENT"] = "DEV"
-
     def setUp(self):
         self.a_user = User.objects.create(
             firebase_uid=create_random_string(FIREBASE_UID_LENGTH))
@@ -213,6 +208,17 @@ class TestExpensesModel(TestCase):
 
 
 class TestExponsesView(APITestCase):
+    def assertActionInSecureEnvironment(self, action):
+        os.environ["ENVIRONMENT"] = "PROD"
+        self.assertEqual(action(self).status_code, status.HTTP_401_UNAUTHORIZED)
+        os.environ["ENVIRONMENT"] = "DEV"
+
+    def assertExpenseInformationIsRight(self, json_response, value, date, category_id, name):
+        self.assertEqual(json_response['value'], value)
+        self.assertEqual(json_response['date'], date)
+        self.assertEqual(json_response['category']['id'], category_id)
+        self.assertEqual(json_response['name'], name)
+
     def setUp(self):
         self.endpoint = '/expense'
 
@@ -288,10 +294,7 @@ class TestExponsesView(APITestCase):
 
         json_response = response.json()[0]
 
-        self.assertEqual(json_response['value'], 59999.0)
-        self.assertEqual(json_response['date'], '2021-03-25')
-        self.assertEqual(json_response['category']['id'], 2)
-        self.assertEqual(json_response['name'], 'Expensive Expense')
+        self.assertExpenseInformationIsRight(json_response, 59999.0, '2021-03-25', 2, 'Expensive Expense')
 
     def test_user_update_all_information_related_to_category_expense(self):
         self.client.post(self.endpoint, {
@@ -315,10 +318,7 @@ class TestExponsesView(APITestCase):
 
         json_response = response.json()[0]
 
-        self.assertEqual(json_response['value'], 87444.0)
-        self.assertEqual(json_response['date'], '2020-02-05')
-        self.assertEqual(json_response['category']['id'], 1)
-        self.assertEqual(json_response['name'], "Modified Expense")
+        self.assertExpenseInformationIsRight(json_response, 87444.0, '2020-02-05', 1, 'Modified Expense')
 
     def test_user_update_only_category_of_created_expense(self):
         self.client.post(self.endpoint, {
@@ -342,10 +342,7 @@ class TestExponsesView(APITestCase):
 
         json_response = response.json()[0]
 
-        self.assertEqual(json_response['value'], 250.5)
-        self.assertEqual(json_response['date'], '2021-01-30')
-        self.assertEqual(json_response['category']['id'], 1)
-        self.assertEqual(json_response['name'], "Another expense")
+        self.assertExpenseInformationIsRight(json_response, 250.5, '2021-01-30', 1, 'Another expense')
 
     def test_user_forgots_to_include_field_in_create_request(self):
         response = self.client.post(self.endpoint, {
@@ -407,15 +404,8 @@ class TestExponsesView(APITestCase):
         json_response_one = response.json()[0]
         json_response_two = response.json()[1]
 
-        self.assertEqual(json_response_one['value'], 123456.0)
-        self.assertEqual(json_response_one['date'], '2022-06-02')
-        self.assertEqual(json_response_one['category']['id'], 3)
-        self.assertEqual(json_response_one['name'], "Another expense")
-
-        self.assertEqual(json_response_two['value'], 10599.0)
-        self.assertEqual(json_response_two['date'], '2021-05-20')
-        self.assertEqual(json_response_two['category']['id'], 1)
-        self.assertEqual(json_response_two['name'], 'Very old expense')
+        self.assertExpenseInformationIsRight(json_response_one, 123456.0, '2022-06-02', 3, 'Another expense')
+        self.assertExpenseInformationIsRight(json_response_two, 10599.0, '2021-05-20', 1, 'Very old expense')
 
     def test_user_reads_expenses_within_extended_time_line_of_a_specific_category(self):
         self.client.post(self.endpoint, {
@@ -449,48 +439,42 @@ class TestExponsesView(APITestCase):
         json_response_one = response.json()[0]
         json_response_two = response.json()[1]
 
-        self.assertEqual(json_response_one['value'], 10500.0)
-        self.assertEqual(json_response_one['date'], '2021-12-30')
-        self.assertEqual(json_response_one['category']['id'], 1)
-        self.assertEqual(json_response_one['name'], 'Same category very old expense')
-
-        self.assertEqual(json_response_two['value'], 10599.0)
-        self.assertEqual(json_response_two['date'], '2021-05-20')
-        self.assertEqual(json_response_two['category']['id'], 1)
-        self.assertEqual(json_response_two['name'], "Very old expense")
+        self.assertExpenseInformationIsRight(json_response_one, 10500.0, '2021-12-30', 1, 'Same category very old expense')
+        self.assertExpenseInformationIsRight(json_response_two, 10599.0, '2021-05-20', 1, 'Very old expense')
 
     def test_user_has_no_provide_valid_token_to_read_expenses(self):
-        os.environ["ENVIRONMENT"] = "PROD"
-        response = self.client.get(self.endpoint)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        os.environ["ENVIRONMENT"] = "DEV"
+        def action(self):
+            return self.client.get(self.endpoint)
+
+        self.assertActionInSecureEnvironment(action)
 
     def test_user_has_no_provide_valid_token_to_add_expense(self):
-        os.environ["ENVIRONMENT"] = "PROD"
-        response = self.client.post(self.endpoint, {
+        def action(self):
+            return self.client.post(self.endpoint, {
             'value': 250.5,
             'date': '2021-01-30',
             'category_id': 3,
             'name': "Another expense"
         }, format='json')
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        os.environ["ENVIRONMENT"] = "DEV"
 
-    def test_user_has_no_provide_valid_token_to_patch_expense(self):
-        os.environ["ENVIRONMENT"] = "PROD"
-        response = self.client.patch(self.endpoint, {
+        self.assertActionInSecureEnvironment(action)
+
+    def test_user_has_no_provide_valid_token_to_patch_expense(self):        
+        def action(self):
+            return self.client.patch(self.endpoint, {
             'id': 1444,
             'value': 250.5,
             'date': '2021-01-30',
             'category_id': 3,
             'name': "Another expense"
         }, format='json')
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        os.environ["ENVIRONMENT"] = "DEV"
+
+        self.assertActionInSecureEnvironment(action)
+
 
     def test_user_has_no_provide_valid_token_to_delete_expensey(self):
-        os.environ["ENVIRONMENT"] = "PROD"
-        response = self.client.delete(
+        def action(self):
+            return self.client.delete(
             self.endpoint, {'id': 777}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        os.environ["ENVIRONMENT"] = "DEV"
+
+        self.assertActionInSecureEnvironment(action)
