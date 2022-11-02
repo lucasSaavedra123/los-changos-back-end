@@ -40,6 +40,7 @@ jobs:
     - name: Run Postgres Server
       run: |
         docker run -e POSTGRES_PASSWORD=$DB_PASSWORD -e POSTGRES_USER=$DB_USER -e POSTGRES_DB=$DB_NAME -p 8080:8080 -d postgres:14.5
+        sleep 30
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
