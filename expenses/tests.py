@@ -383,6 +383,10 @@ class TestExponsesView(APITestCase):
 
         self.assertEqual(response.json()[0]['category']['id'], 3)
 
+    def test_user_forgots_to_include_timeline_field(self):
+        response = self.client.post(self.endpoint + "/filter", {}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_user_reads_expenses_within_extended_time_line(self):
         self.client.post(self.endpoint, {
             'value': 10599,
