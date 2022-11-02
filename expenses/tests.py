@@ -377,7 +377,8 @@ class TestExponsesView(APITestCase):
         }, format='json')
 
         response = self.client.post(self.endpoint + "/filter", {
-            "timeline": ["2022-06-02", "2022-06-02"]
+            "timeline": ["2022-06-02", "2022-06-02"],
+            "category_id": []
         }, format='json')
 
         self.assertEqual(response.json()[0]['category']['id'], 3)
@@ -442,7 +443,6 @@ class TestExponsesView(APITestCase):
         self.assertExpenseInformationIsRight(json_response_one, 10500.0, '2021-12-30', 1, 'Same category very old expense')
         self.assertExpenseInformationIsRight(json_response_two, 10599.0, '2021-05-20', 1, 'Very old expense')
 
-    """
     def test_user_reads_expenses_within_extended_time_line_of_several_categories(self):
         self.client.post(self.endpoint, {
             'value': 10599,
@@ -470,16 +470,15 @@ class TestExponsesView(APITestCase):
             "category_id": [1, 3]
         }, format='json')
 
-        self.assertEqual(len(response.json()), 2)
+        self.assertEqual(len(response.json()), 3)
 
         json_response_one = response.json()[0]
         json_response_two = response.json()[1]
-        json_response_three = response.json()[3]
+        json_response_three = response.json()[2]
 
         self.assertExpenseInformationIsRight(json_response_one, 10500.0, '2021-12-30', 1, 'Same category very old expense')
         self.assertExpenseInformationIsRight(json_response_two, 10599.0, '2021-05-20', 1, 'Very old expense')
         self.assertExpenseInformationIsRight(json_response_three, 123456.0, '2022-06-02', 3, 'Another expense')
-    """
 
     def test_user_has_no_provide_valid_token_to_read_expenses(self):
         def action(self):

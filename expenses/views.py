@@ -88,17 +88,23 @@ def expense_filter(request):
                 date(*first_date),
                 date(*second_date)
             )
+
+            for expense in expenses:
+                response.append(expense.as_dict)
         else:
             if isinstance(request_body['category_id'], Sequence):
                 expenses = Expense.objects.none()
 
                 for category_id in request_body['category_id']:
-                    expenses = expenses.union(Expense.filter_by_category_within_timeline_from_user(
+                    expenses = Expense.filter_by_category_within_timeline_from_user(
                     request.META['user'],
                     date(*first_date),
                     date(*second_date),
                     Category.objects.get(id=category_id)
-                ))
+                    )
+
+                    for expense in expenses:
+                        response.append(expense.as_dict)
 
             else:
                 expenses = Expense.filter_by_category_within_timeline_from_user(
@@ -108,8 +114,8 @@ def expense_filter(request):
                     Category.objects.get(id=request_body['category_id'])
                 )
 
-        for expense in expenses:
-            response.append(expense.as_dict)
+                for expense in expenses:
+                    response.append(expense.as_dict)
 
         return JsonResponse(response, safe=False)
 
