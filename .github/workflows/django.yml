@@ -8,6 +8,7 @@ on:
 
 env:
   DB_NAME: WalletifyDatabase
+  DATABASE: SQLITE
   DB_PASSWORD: WalletifyUnsecurePassword
   DB_HOST: localhost
   DB_USER: walletify
@@ -49,6 +50,9 @@ jobs:
         pip install -r requirements.txt
         pip install coverage 
         pip install coveralls
+    - name: Sleep
+      run: |
+        sleep 15 
     - name: Run Tests
       run: |
         python manage.py test

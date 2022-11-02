@@ -1,7 +1,9 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 
 from users.models import User
+from utils import create_random_color_string
 
 
 # Create your models here.
@@ -18,6 +20,14 @@ class Category(models.Model):
         max_length=50,
         default="Paid",
         editable=True)
+
+    color = models.CharField(
+        max_length=50,
+        default=None,
+        editable=False,
+        null=True
+    )
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -39,7 +49,7 @@ class Category(models.Model):
     def categories_from_user(cls, user):
         static_categories = cls.static_categories()
         user_created_categories = cls.objects.filter(user=user)
-        return static_categories.union(user_created_categories)
+        return static_categories.union(user_created_categories).order_by('id')
 
     @property
     def static(self):
@@ -51,7 +61,8 @@ class Category(models.Model):
             'id': self.id,
             'material_ui_icon_name': self.material_ui_icon_name,
             'static': self.static,
-            'name': self.name.title()
+            'name': self.name.title(),
+            'color': self.color
         }
 
     def save(self, *args, update=False, **kwargs):
@@ -63,6 +74,8 @@ class Category(models.Model):
                 if category.name == self.name:
                     raise ValidationError(
                         "User cannot create another repeated category")
+
+        self.color = create_random_color_string()
 
         self.full_clean()
         super(Category, self).save(*args, **kwargs)

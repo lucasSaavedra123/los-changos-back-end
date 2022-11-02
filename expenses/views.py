@@ -1,3 +1,6 @@
+from collections.abc import Sequence
+
+from datetime import date
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.core.serializers import serialize
@@ -8,8 +11,6 @@ from rest_framework import status
 from categories.models import Category
 
 from .models import Expense
-
-import json
 
 # Create your views here.
 
@@ -65,5 +66,58 @@ def expense(request):
             expense.save()
 
             return Response(None, status=status.HTTP_200_OK)
+    except KeyError as key_error_exception:
+        return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def expense_filter(request):
+    request_body = request.META['body']
+
+    try:
+        response = []
+
+        first_date = request_body["timeline"][0].split("-")
+        second_date = request_body["timeline"][1].split("-")
+
+        first_date = [int(string_piece) for string_piece in first_date]
+        second_date = [int(string_piece) for string_piece in second_date]
+
+        if "category_id" not in request_body or request_body['category_id'] == []:
+            expenses = Expense.filter_within_timeline_from_user(
+                request.META['user'],
+                date(*first_date),
+                date(*second_date)
+            )
+
+            for expense in expenses:
+                response.append(expense.as_dict)
+        else:
+            if isinstance(request_body['category_id'], Sequence):
+                expenses = Expense.objects.none()
+
+                for category_id in request_body['category_id']:
+                    expenses = Expense.filter_by_category_within_timeline_from_user(
+                    request.META['user'],
+                    date(*first_date),
+                    date(*second_date),
+                    Category.objects.get(id=category_id)
+                    )
+
+                    for expense in expenses:
+                        response.append(expense.as_dict)
+
+            else:
+                expenses = Expense.filter_by_category_within_timeline_from_user(
+                    request.META['user'],
+                    date(*first_date),
+                    date(*second_date),
+                    Category.objects.get(id=request_body['category_id'])
+                )
+
+                for expense in expenses:
+                    response.append(expense.as_dict)
+
+        return JsonResponse(response, safe=False)
+
     except KeyError as key_error_exception:
         return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)
