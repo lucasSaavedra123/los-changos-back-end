@@ -8,6 +8,7 @@ on:
 
 env:
   DB_NAME: WalletifyDatabase
+  DATABASE: POSTGRES
   DB_PASSWORD: WalletifyUnsecurePassword
   DB_HOST: localhost
   DB_USER: walletify
