@@ -91,3 +91,60 @@ class TestCategoriesView(APITestCase):
 
     def setUp(self):
         self.endpoint = '/budget'
+
+    
+    def test_create_one_budge_with_one_detail_for_user(self):
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2023-05-01',
+            'final_date': '2023-06-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'limit': 5000
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_creates_two_budgets_with_different_details_for_user_and_then_he_retrieve_them(self):
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2023-05-01',
+            'final_date': '2023-06-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'limit': 5000
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2023-01-01',
+            'final_date': '2023-02-01',
+            'details': [
+                {
+                    'category_id': 3,
+                    'limit': 1500
+                },
+                {
+                    'category_id': 2,
+                    'limit': 5000
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.get(self.endpoint)
+
+        self.assertEqual(len(response.json()), 2)
+
+        first_budget = response.json()[0]
+
+        self.assertEqual(first_budget['initial_date'], '2023-05-01')
+        self.assertEqual(first_budget['final_date'], '2023-06-01')
+        self.assertEqual(len(first_budget['details']), 1)
+        self.assertEqual(len(first_budget['total_limit']), 5000)

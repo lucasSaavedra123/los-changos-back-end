@@ -42,6 +42,15 @@ class Budget(models.Model):
 
         return total
 
+    @property
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'initial_date': str(self.initial_date),
+            'final_date': str(self.final_date),
+            'details': [detail.as_dict for detail in Detail.from_budget(self)],
+        }
+
     def add_detail(self, category, limit):
         Detail.objects.create(category=category, limit=limit, assigned_budget=self)
 
@@ -87,3 +96,14 @@ class Detail(models.Model):
         blank=True,
         editable=True
     )
+
+    @classmethod
+    def from_budget(cls, budget):
+        return cls.objects.filter(assigned_budget=budget)
+
+    @property
+    def as_dict(self):
+        return {
+            'category': self.category.as_dict,
+            'limit': self.limit
+        }
