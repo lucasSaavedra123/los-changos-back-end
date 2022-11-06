@@ -49,6 +49,7 @@ class Budget(models.Model):
             'initial_date': str(self.initial_date),
             'final_date': str(self.final_date),
             'details': [detail.as_dict for detail in Detail.from_budget(self)],
+            'total_limit': float(self.total_limit)
         }
 
     def add_detail(self, category, limit):

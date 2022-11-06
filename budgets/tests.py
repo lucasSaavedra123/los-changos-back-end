@@ -147,4 +147,4 @@ class TestCategoriesView(APITestCase):
         self.assertEqual(first_budget['initial_date'], '2023-05-01')
         self.assertEqual(first_budget['final_date'], '2023-06-01')
         self.assertEqual(len(first_budget['details']), 1)
-        self.assertEqual(len(first_budget['total_limit']), 5000)
+        self.assertEqual(first_budget['total_limit'], 5000)
