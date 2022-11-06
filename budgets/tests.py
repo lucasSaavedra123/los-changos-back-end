@@ -83,7 +83,11 @@ class TestCategoriesModel(TestCase):
             Budget.objects.create(user=self.a_user, initial_date='2022-12-5', final_date='2023-12-1')
 
 
-"""
 class TestCategoriesView(APITestCase):
-    pass
-"""
+    def assertActionInSecureEnvironment(self, action):
+        os.environ["ENVIRONMENT"] = "PROD"
+        self.assertEqual(action(self).status_code, status.HTTP_401_UNAUTHORIZED)
+        os.environ["ENVIRONMENT"] = "DEV"
+
+    def setUp(self):
+        self.endpoint = '/budget'
