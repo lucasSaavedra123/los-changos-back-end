@@ -4,16 +4,18 @@ from django.core.exceptions import ValidationError
 
 from users.models import User
 from categories.models import Category
+from expenses.models import Expense
 from datetime import date
 from datetime import datetime
 
 def validate_date_is_not_in_the_past(value):
     today = date.today()
-    if value < today:
+    if not Budget.force and value < today:
         raise ValidationError('Budget date cannot be in the past.')
 
 # Create your models here.
 class Budget(models.Model):
+    force = False
     id = models.AutoField(primary_key=True)
 
     user = models.ForeignKey(
@@ -52,19 +54,32 @@ class Budget(models.Model):
             'total_limit': float(self.total_limit)
         }
 
+    @property
+    def total_spent(self):
+        total = 0
+
+        for detail in Detail.objects.filter(assigned_budget=self):
+            total += detail.total_spent
+
+        return total
+
     def add_detail(self, category, limit):
-        Detail.objects.create(category=category, limit=limit, assigned_budget=self)
+        return Detail.objects.create(category=category, limit=limit, assigned_budget=self)
 
     def save(self, *args, update=False, **kwargs):
         self.full_clean()
 
         if not update:
-            if self.final_date < self.initial_date:
+            if not Budget.force and self.final_date < self.initial_date:
+                Budget.force = False
                 raise ValidationError("Budget initial date should be earlier than final date.")
 
             for budget in Budget.all_from_user(self.user):
-                if budget.initial_date <= self.final_date <= budget.final_date or budget.initial_date <= self.initial_date <= budget.final_date :
+                if not Budget.force and (budget.initial_date <= self.final_date <= budget.final_date or budget.initial_date <= self.initial_date <= budget.final_date):
+                    Budget.force = False
                     raise ValidationError("Budget is overlapping with another one.")
+
+        Budget.force = False
 
         super(Budget, self).save(*args, **kwargs)
 
@@ -108,3 +123,19 @@ class Detail(models.Model):
             'category': self.category.as_dict,
             'limit': self.limit
         }
+
+    @property
+    def total_spent(self):
+        expenses = Expense.objects.filter(
+            user=self.assigned_budget.user,
+            date__gte=self.assigned_budget.initial_date,
+            date__lte=self.assigned_budget.final_date,
+            category=self.category
+        )
+
+        total = 0
+
+        for expense in expenses:
+            total += expense.value
+
+        return total

@@ -11,6 +11,7 @@ from utils import create_random_string
 from users.models import User
 from budgets.models import Budget
 from django.db.utils import IntegrityError
+from expenses.models import Expense
 
 # Create your tests here.
 class TestCategoriesModel(TestCase):
@@ -82,6 +83,43 @@ class TestCategoriesModel(TestCase):
         with self.assertRaisesMessage(ValidationError, "['Budget is overlapping with another one.']"):
             Budget.objects.create(user=self.a_user, initial_date='2022-12-5', final_date='2023-12-1')
 
+    def test_user_add_expense_in_budget(self):
+        Budget.force = True
+        new_budget = Budget.objects.create(user=self.a_user, initial_date='2020-01-01', final_date='2025-01-01')
+
+        details = [
+            new_budget.add_detail(Category.objects.all()[0], 10000),
+            new_budget.add_detail(Category.objects.all()[1], 10000),
+            new_budget.add_detail(Category.objects.all()[2], 15000)
+        ]
+
+        Expense.create_expense_for_user(self.a_user, date='2021-01-30', value=5000, category=Category.objects.all()[0], name='New Expense')
+
+        self.assertEqual(details[0].total_spent, 5000)
+        self.assertEqual(details[1].total_spent, 0)
+        self.assertEqual(details[2].total_spent, 0)
+        self.assertEqual(new_budget.total_spent, 5000)
+
+    def test_user_add_several_expenses_in_budget(self):
+        Budget.force = True
+        new_budget = Budget.objects.create(user=self.a_user, initial_date='2020-01-01', final_date='2025-01-01')
+
+        details = [
+            new_budget.add_detail(Category.objects.all()[0], 10000),
+            new_budget.add_detail(Category.objects.all()[1], 10000),
+            new_budget.add_detail(Category.objects.all()[2], 15000)
+        ]
+
+        Expense.create_expense_for_user(self.a_user, date='2021-02-05', value=5000, category=Category.objects.all()[0], name='New Expense')
+        Expense.create_expense_for_user(self.a_user, date='2022-01-30', value=2500, category=Category.objects.all()[1], name='New Expense')
+        Expense.create_expense_for_user(self.a_user, date='2020-05-30', value=5000, category=Category.objects.all()[1], name='New Expense')
+        Expense.create_expense_for_user(self.a_user, date='2020-11-12', value=1000, category=Category.objects.all()[3], name='New Expense')
+
+        self.assertEqual(details[0].total_spent, 5000)
+        self.assertEqual(details[1].total_spent, 7500)
+        self.assertEqual(details[2].total_spent, 0)
+        self.assertEqual(new_budget.total_spent, 12500)
+
 
 class TestCategoriesView(APITestCase):
     def assertActionInSecureEnvironment(self, action):
@@ -92,7 +130,6 @@ class TestCategoriesView(APITestCase):
     def setUp(self):
         self.endpoint = '/budget'
 
-    
     def test_create_one_budge_with_one_detail_for_user(self):
         response = self.client.post(self.endpoint, {
             'initial_date': '2023-05-01',
