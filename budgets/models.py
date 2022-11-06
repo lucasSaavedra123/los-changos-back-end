@@ -28,6 +28,10 @@ class Budget(models.Model):
     initial_date = models.DateField(validators=[validate_date_is_not_in_the_past])
     final_date = models.DateField(validators=[validate_date_is_not_in_the_past])
 
+    @classmethod
+    def all_from_user(cls, user):
+        return Budget.objects.filter(user=user)
+
     @property
     def total_limit(self):
         details = Detail.objects.filter(assigned_budget=self)
@@ -43,6 +47,15 @@ class Budget(models.Model):
 
     def save(self, *args, update=False, **kwargs):
         self.full_clean()
+
+        if not update:
+            if self.final_date < self.initial_date:
+                raise ValidationError("Budget initial date should be earlier than final date.")
+
+            for budget in Budget.all_from_user(self.user):
+                if budget.initial_date <= self.final_date <= budget.final_date or budget.initial_date <= self.initial_date <= budget.final_date :
+                    raise ValidationError("Budget is overlapping with another one.")
+
         super(Budget, self).save(*args, **kwargs)
 
 class Detail(models.Model):

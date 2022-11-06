@@ -45,6 +45,44 @@ class TestCategoriesModel(TestCase):
         with self.assertRaisesMessage(ValidationError, "{'initial_date': ['Budget date cannot be in the past.']}"):
             Budget.objects.create(user=self.a_user, initial_date='2021-05-5', final_date='2024-02-1')
 
+    def test_budget_cannot_be_finished_in_the_past(self):
+        with self.assertRaisesMessage(ValidationError, "{'final_date': ['Budget date cannot be in the past.']}"):
+            Budget.objects.create(user=self.a_user, initial_date='2050-05-5', final_date='2021-02-1')
+
+    def test_budget_initial_date_should_be_earlier_than_final_date(self):
+        with self.assertRaisesMessage(ValidationError, "['Budget initial date should be earlier than final date.']"):
+            Budget.objects.create(user=self.a_user, initial_date='2050-05-5', final_date='2030-01-5')
+
+    def test_user_can_create_two_budgets_that_not_overlap(self):
+        Budget.objects.create(user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
+        Budget.objects.create(user=self.a_user, initial_date='2023-12-6', final_date='2027-05-1')
+        self.assertEqual(len(Budget.all_from_user(self.a_user)), 2)
+
+    def test_user_cannot_create_two_budgets_that_overlap_slightly(self):
+        Budget.objects.create(user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
+
+        with self.assertRaisesMessage(ValidationError, "['Budget is overlapping with another one.']"):
+            Budget.objects.create(user=self.a_user, initial_date='2023-12-5', final_date='2027-05-1')
+
+        with self.assertRaisesMessage(ValidationError, "['Budget is overlapping with another one.']"):
+            Budget.objects.create(user=self.a_user, initial_date='2022-12-01', final_date='2022-12-5')
+
+    def test_user_cannot_create_two_budgets_that_overlap_partially(self):
+        Budget.objects.create(user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
+        
+        with self.assertRaisesMessage(ValidationError, "['Budget is overlapping with another one.']"):
+            Budget.objects.create(user=self.a_user, initial_date='2022-12-1', final_date='2022-12-30')
+
+        with self.assertRaisesMessage(ValidationError, "['Budget is overlapping with another one.']"):
+            Budget.objects.create(user=self.a_user, initial_date='2023-01-01', final_date='2024-12-5')
+
+    def test_user_cannot_create_two_budgets_that_overlap_completely(self):
+        Budget.objects.create(user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
+        
+        with self.assertRaisesMessage(ValidationError, "['Budget is overlapping with another one.']"):
+            Budget.objects.create(user=self.a_user, initial_date='2022-12-5', final_date='2023-12-1')
+
+
 """
 class TestCategoriesView(APITestCase):
     pass
