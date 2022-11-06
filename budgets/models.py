@@ -7,10 +7,10 @@ from categories.models import Category
 from datetime import date
 from datetime import datetime
 
-def validate_date_is_not_in_the_future(value):
+def validate_date_is_not_in_the_past(value):
     today = date.today()
-    if value > today:
-        raise ValidationError('Expense date cannot be in the future.')
+    if value < today:
+        raise ValidationError('Budget date cannot be in the past.')
 
 # Create your models here.
 class Budget(models.Model):
@@ -25,8 +25,8 @@ class Budget(models.Model):
         editable=True
     )
 
-    initial_date = models.DateField(validators=[validate_date_is_not_in_the_future])
-    final_date = models.DateField(validators=[validate_date_is_not_in_the_future])
+    initial_date = models.DateField(validators=[validate_date_is_not_in_the_past])
+    final_date = models.DateField(validators=[validate_date_is_not_in_the_past])
 
     @property
     def total_limit(self):
@@ -41,22 +41,9 @@ class Budget(models.Model):
     def add_detail(self, category, limit):
         Detail.objects.create(category=category, limit=limit, assigned_budget=self)
 
-    """
     def save(self, *args, update=False, **kwargs):
-        self.name = self.name.lower()
-        user_categories = Category.categories_from_user(self.user)
-
-        if not update:
-            for category in user_categories:
-                if category.name == self.name:
-                    raise ValidationError(
-                        "User cannot create another repeated category")
-
-        self.color = create_random_color_string()
-
         self.full_clean()
-        super(Category, self).save(*args, **kwargs)
-    """
+        super(Budget, self).save(*args, **kwargs)
 
 class Detail(models.Model):
     class Meta:

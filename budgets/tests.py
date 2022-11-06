@@ -41,6 +41,10 @@ class TestCategoriesModel(TestCase):
 
         self.assertEqual(IntegrityError, type(raised.exception))
 
+    def test_budget_cannot_be_started_in_the_past(self):
+        with self.assertRaisesMessage(ValidationError, "{'initial_date': ['Budget date cannot be in the past.']}"):
+            Budget.objects.create(user=self.a_user, initial_date='2021-05-5', final_date='2024-02-1')
+
 """
 class TestCategoriesView(APITestCase):
     pass
