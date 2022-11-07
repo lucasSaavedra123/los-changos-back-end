@@ -51,7 +51,8 @@ class Budget(models.Model):
             'initial_date': str(self.initial_date),
             'final_date': str(self.final_date),
             'details': [detail.as_dict for detail in Detail.from_budget(self)],
-            'total_limit': float(self.total_limit)
+            'total_limit': float(self.total_limit),
+            'total_spent': float(self.total_spent)
         }
 
     @property
@@ -121,7 +122,8 @@ class Detail(models.Model):
     def as_dict(self):
         return {
             'category': self.category.as_dict,
-            'limit': self.limit
+            'limit': self.limit,
+            'spent': self.total_spent
         }
 
     @property
