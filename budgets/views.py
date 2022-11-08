@@ -26,6 +26,7 @@ def budget(request):
             return JsonResponse(budgets_as_dict, safe=False)
 
         elif request.method == 'POST':
+            Budget.force = True
             new_budget = Budget.objects.create(
                 user=request.META['user'],
                 initial_date=request_body['initial_date'],
