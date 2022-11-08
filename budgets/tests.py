@@ -42,10 +42,6 @@ class TestCategoriesModel(TestCase):
 
         self.assertEqual(IntegrityError, type(raised.exception))
 
-    def test_budget_cannot_be_started_in_the_past(self):
-        with self.assertRaisesMessage(ValidationError, "{'initial_date': ['Budget date cannot be in the past.']}"):
-            Budget.objects.create(user=self.a_user, initial_date='2021-05-5', final_date='2024-02-1')
-
     def test_budget_cannot_be_finished_in_the_past(self):
         with self.assertRaisesMessage(ValidationError, "{'final_date': ['Budget date cannot be in the past.']}"):
             Budget.objects.create(user=self.a_user, initial_date='2050-05-5', final_date='2021-02-1')
@@ -84,7 +80,6 @@ class TestCategoriesModel(TestCase):
             Budget.objects.create(user=self.a_user, initial_date='2022-12-5', final_date='2023-12-1')
 
     def test_user_add_expense_in_budget(self):
-        Budget.force = True
         new_budget = Budget.objects.create(user=self.a_user, initial_date='2020-01-01', final_date='2025-01-01')
 
         details = [
@@ -101,7 +96,6 @@ class TestCategoriesModel(TestCase):
         self.assertEqual(new_budget.total_spent, 5000)
 
     def test_user_add_several_expenses_in_budget(self):
-        Budget.force = True
         new_budget = Budget.objects.create(user=self.a_user, initial_date='2020-01-01', final_date='2025-01-01')
 
         details = [
@@ -187,3 +181,61 @@ class TestCategoriesView(APITestCase):
         self.assertEqual(first_budget['details'][0]['spent'], 0)
         self.assertEqual(first_budget['total_limit'], 5000)
         self.assertEqual(first_budget['total_spent'], 0)
+
+
+    def test_user_creates_a_budget_and_then_he_modifies_it(self):
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2023-02-01',
+            'final_date': '2023-02-01',
+            'details': [
+                {
+                    'category_id': 3,
+                    'limit': 1500
+                },
+                {
+                    'category_id': 2,
+                    'limit': 5000
+                }
+            ]
+        }, format='json')
+
+        response = self.client.patch(self.endpoint, {
+            'id': 1,
+            'initial_date': '2023-01-01',
+            'final_date': '2023-02-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'limit': 1000
+                },
+                {
+                    'category_id': 3,
+                    'limit': 2000
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = self.client.get(self.endpoint, format='json')
+
+        response = response.json()[0]
+
+        self.assertEqual(response['id'], 1)
+        self.assertEqual(response['initial_date'], '2023-01-01')
+        self.assertEqual(response['final_date'], '2023-02-01')
+        self.assertEqual(response['details'][0]['category']['id'], 1)
+        self.assertEqual(response['details'][0]['limit'], 1000.00)
+        self.assertEqual(response['details'][1]['category']['id'], 3)
+        self.assertEqual(response['details'][1]['limit'], 2000.00)
+
+    def test_user_cannot_delete_another_user_budget(self):
+        another_user = User.objects.create(
+            firebase_uid=create_random_string(FIREBASE_UID_LENGTH))
+
+        Budget.objects.create(user=another_user, initial_date='2020-01-01', final_date='2025-01-01')
+
+        response = self.client.delete(
+            self.endpoint, {'id': '1'}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

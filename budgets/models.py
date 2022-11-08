@@ -10,12 +10,11 @@ from datetime import datetime
 
 def validate_date_is_not_in_the_past(value):
     today = date.today()
-    if not Budget.force and value < today:
+    if value < today:
         raise ValidationError('Budget date cannot be in the past.')
 
 # Create your models here.
 class Budget(models.Model):
-    force = False
     id = models.AutoField(primary_key=True)
 
     user = models.ForeignKey(
@@ -27,7 +26,7 @@ class Budget(models.Model):
         editable=True
     )
 
-    initial_date = models.DateField(validators=[validate_date_is_not_in_the_past])
+    initial_date = models.DateField(validators=[])
     final_date = models.DateField(validators=[validate_date_is_not_in_the_past])
 
     @classmethod
@@ -70,17 +69,13 @@ class Budget(models.Model):
     def save(self, *args, update=False, **kwargs):
         self.full_clean()
 
+        if self.final_date < self.initial_date:
+            raise ValidationError("Budget initial date should be earlier than final date.")
+
         if not update:
-            if not Budget.force and self.final_date < self.initial_date:
-                Budget.force = False
-                raise ValidationError("Budget initial date should be earlier than final date.")
-
             for budget in Budget.all_from_user(self.user):
-                if not Budget.force and (budget.initial_date <= self.final_date <= budget.final_date or budget.initial_date <= self.initial_date <= budget.final_date):
-                    Budget.force = False
+                if (budget.initial_date <= self.final_date <= budget.final_date or budget.initial_date <= self.initial_date <= budget.final_date):
                     raise ValidationError("Budget is overlapping with another one.")
-
-        Budget.force = False
 
         super(Budget, self).save(*args, **kwargs)
 
@@ -121,9 +116,10 @@ class Detail(models.Model):
     @property
     def as_dict(self):
         return {
+            'id': self.id,
             'category': self.category.as_dict,
-            'limit': self.limit,
-            'spent': self.total_spent
+            'limit': float(self.limit),
+            'spent': float(self.total_spent)
         }
 
     @property
