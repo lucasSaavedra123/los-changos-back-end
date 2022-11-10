@@ -83,7 +83,7 @@ def budget(request):
         return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)
 
 # Create your views here.
-@api_view(['GET', 'POST', 'PATCH', 'DELETE'])
+@api_view(['GET'])
 def current_budget(request):
     if request.method == 'GET':
         current_user_budget = Budget.current_budget_of(request.META['user'])

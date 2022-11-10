@@ -17,8 +17,7 @@ from expenses.models import Expense
 class TestCategoriesModel(TestCase):
 
     def setUp(self):
-        self.a_user = User.objects.create(
-            firebase_uid=create_random_string(FIREBASE_UID_LENGTH))
+        self.a_user = User.objects.create(firebase_uid=create_random_string(FIREBASE_UID_LENGTH))
     
     def test_a_budget_is_created_and_has_a_total_limit_with_one_category(self):
         new_budget = Budget.objects.create(user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
