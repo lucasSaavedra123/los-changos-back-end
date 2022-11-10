@@ -5,7 +5,7 @@ from categories.models import Category
 from datetime import date
 from users.models import User
 from datetime import datetime
-
+import requests
 
 def validate_date_is_not_in_the_future(value):
     today = date.today()
