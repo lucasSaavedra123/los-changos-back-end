@@ -58,7 +58,7 @@ def budget(request):
 
             #First check if all details are okay.
             for detail in request_body['details']:
-                request_body['details']
+                request_body['limit']
                 request_body['category_id']
 
             for detail in Detail.objects.filter(assigned_budget=budget):
