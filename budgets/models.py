@@ -138,6 +138,5 @@ class Detail(models.Model):
 
         return total
 
-    @property
     def active(self):
         return self.initial_date < date.today() < self.final_date
