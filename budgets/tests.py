@@ -239,3 +239,56 @@ class TestCategoriesView(APITestCase):
             self.endpoint, {'id': '1'}, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_user_has_no_provide_valid_token_to_read_budgets(self):
+        def action(self):
+            return self.client.get(self.endpoint)
+
+        self.assertActionInSecureEnvironment(action)
+
+    def test_user_has_no_provide_valid_token_to_add_budgets(self):
+        def action(self):
+            return self.client.post(self.endpoint, {
+            'id': 1,
+            'initial_date': '2023-01-01',
+            'final_date': '2023-02-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'limit': 1000
+                },
+                {
+                    'category_id': 3,
+                    'limit': 2000
+                }
+            ]
+        }, format='json')
+
+        self.assertActionInSecureEnvironment(action)
+
+    def test_user_has_no_provide_valid_token_to_patch_budget(self):        
+        def action(self):
+            return self.client.patch(self.endpoint, {
+            'id': 5,
+            'initial_date': '2023-01-01',
+            'final_date': '2023-02-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'limit': 1000
+                },
+                {
+                    'category_id': 3,
+                    'limit': 2000
+                }
+            ]
+        }, format='json')
+
+        self.assertActionInSecureEnvironment(action)
+
+    def test_user_has_no_provide_valid_token_to_delete_budget(self):
+        def action(self):
+            return self.client.delete(
+            self.endpoint, {'id': 90}, format='json')
+
+        self.assertActionInSecureEnvironment(action)
