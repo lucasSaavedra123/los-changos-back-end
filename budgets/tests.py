@@ -138,6 +138,19 @@ class TestCategoriesView(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_create_one_budget_but_one_field_is_not_included(self):
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2023-05-01',
+            'final_date': '2023-06-01',
+            'details': [
+                {
+                    'category_id': 1,
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_creates_two_budgets_with_different_details_for_user_and_then_he_retrieve_them(self):
         response = self.client.post(self.endpoint, {
             'initial_date': '2023-05-01',
