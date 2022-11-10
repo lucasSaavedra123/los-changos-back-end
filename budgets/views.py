@@ -65,9 +65,5 @@ def budget(request):
             budget.save(update=True)
 
             return Response(None, status=status.HTTP_200_OK)
-
-
     except KeyError as key_error_exception:
         return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
-        print(e)
