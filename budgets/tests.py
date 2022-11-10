@@ -195,11 +195,10 @@ class TestCategoriesView(APITestCase):
         self.assertEqual(first_budget['total_limit'], 5000)
         self.assertEqual(first_budget['total_spent'], 0)
 
-
     def test_user_creates_a_budget_and_then_he_modifies_it(self):
         response = self.client.post(self.endpoint, {
-            'initial_date': '2022-02-01',
-            'final_date': '2023-02-01',
+            'initial_date': '2030-02-01',
+            'final_date': '2050-02-01',
             'details': [
                 {
                     'category_id': 3,
@@ -214,7 +213,7 @@ class TestCategoriesView(APITestCase):
 
         response = self.client.patch(self.endpoint, {
             'id': 1,
-            'initial_date': '2023-01-01',
+            'initial_date': '2021-01-01',
             'final_date': '2023-02-01',
             'details': [
                 {
@@ -235,12 +234,46 @@ class TestCategoriesView(APITestCase):
         response = response.json()[0]
 
         self.assertEqual(response['id'], 1)
-        self.assertEqual(response['initial_date'], '2023-01-01')
+        self.assertEqual(response['initial_date'], '2021-01-01')
         self.assertEqual(response['final_date'], '2023-02-01')
         self.assertEqual(response['details'][0]['category']['id'], 1)
         self.assertEqual(response['details'][0]['limit'], 1000.00)
         self.assertEqual(response['details'][1]['category']['id'], 3)
         self.assertEqual(response['details'][1]['limit'], 2000.00)
+
+    def test_user_creates_an_active_budget_and_then_he_tries_to_modify_it_but_fails(self):
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2020-02-01',
+            'final_date': '2050-02-01',
+            'details': [
+                {
+                    'category_id': 3,
+                    'limit': 1500
+                },
+                {
+                    'category_id': 2,
+                    'limit': 5000
+                }
+            ]
+        }, format='json')
+
+        response = self.client.patch(self.endpoint, {
+            'id': 1,
+            'initial_date': '2021-01-01',
+            'final_date': '2023-02-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'limit': 1000
+                },
+                {
+                    'category_id': 3,
+                    'limit': 2000
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_user_deletes_own_budget(self):
         response = self.client.post(self.endpoint, {
@@ -258,7 +291,7 @@ class TestCategoriesView(APITestCase):
 
         response = self.client.post(self.endpoint, {
             'initial_date': '2023-01-01',
-            'final_date': '2023-02-01',
+            'final_date': '2050-02-01',
             'details': [
                 {
                     'category_id': 3,
@@ -293,11 +326,9 @@ class TestCategoriesView(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        self.client.delete(self.endpoint, {'id': 1}, format='json')
+        response = self.client.delete(self.endpoint, {'id': 1}, format='json')
 
-        response = self.client.get(self.endpoint)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_user_cannot_delete_another_user_budget(self):
         another_user = User.objects.create(
