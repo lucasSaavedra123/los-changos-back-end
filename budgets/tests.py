@@ -242,6 +242,63 @@ class TestCategoriesView(APITestCase):
         self.assertEqual(response['details'][1]['category']['id'], 3)
         self.assertEqual(response['details'][1]['limit'], 2000.00)
 
+    def test_user_deletes_own_budget(self):
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2023-05-01',
+            'final_date': '2023-06-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'limit': 5000
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2023-01-01',
+            'final_date': '2023-02-01',
+            'details': [
+                {
+                    'category_id': 3,
+                    'limit': 1500
+                },
+                {
+                    'category_id': 2,
+                    'limit': 5000
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.client.delete(self.endpoint, {'id': 1}, format='json')
+
+        response = self.client.get(self.endpoint)
+
+        self.assertEqual(len(response.json()), 1)
+
+    def test_user_cannot_delete_own_current_budget(self):
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2020-05-01',
+            'final_date': '2030-06-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'limit': 5000
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.client.delete(self.endpoint, {'id': 1}, format='json')
+
+        response = self.client.get(self.endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_user_cannot_delete_another_user_budget(self):
         another_user = User.objects.create(
             firebase_uid=create_random_string(FIREBASE_UID_LENGTH))

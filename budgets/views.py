@@ -44,7 +44,11 @@ def budget(request):
             if budget_instance.user != request.META['user']:
                 return Response(None, status=status.HTTP_403_FORBIDDEN)
 
-            budget_instance.delete()
+            if not budget_instance.active:
+                budget_instance.delete()
+            else:
+                return Response({"message": f"Current budgets are neither editable and removable"}, status=status.HTTP_403_FORBIDDEN)
+
             return Response(None, status=status.HTTP_200_OK)
 
         elif request.method == 'PATCH':
@@ -53,21 +57,25 @@ def budget(request):
             if budget.user != request.META['user']:
                 return Response(None, status=status.HTTP_403_FORBIDDEN)
 
-            budget.initial_date = request_body['initial_date']
-            budget.final_date = request_body['final_date']
+            if not budget_instance.active:
+                return Response({"message": f"Current budgets are neither editable and removable"}, status=status.HTTP_403_FORBIDDEN)
 
-            #First check if all details are okay.
-            for detail in request_body['details']:
-                detail['limit']
-                detail['category_id']
+            else:
+                budget.initial_date = request_body['initial_date']
+                budget.final_date = request_body['final_date']
 
-            for detail in Detail.objects.filter(assigned_budget=budget):
-                detail.delete()
+                #First check if all details are okay.
+                for detail in request_body['details']:
+                    detail['limit']
+                    detail['category_id']
 
-            for detail in request_body['details']:
-                budget.add_detail(Category.objects.get(id=detail['category_id']), detail['limit'])
+                for detail in Detail.objects.filter(assigned_budget=budget):
+                    detail.delete()
 
-            budget.save(update=True)
+                for detail in request_body['details']:
+                    budget.add_detail(Category.objects.get(id=detail['category_id']), detail['limit'])
+
+                budget.save(update=True)
 
             return Response(None, status=status.HTTP_200_OK)
     except KeyError as key_error_exception:
