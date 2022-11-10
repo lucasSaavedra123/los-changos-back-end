@@ -417,3 +417,59 @@ class TestCategoriesView(APITestCase):
             self.endpoint, {'id': 90}, format='json')
 
         self.assertActionInSecureEnvironment(action)
+
+    def test_user_get_current_budget(self):
+        self.client.post(self.endpoint, {
+            'id': 1,
+            'initial_date': '2020-01-01',
+            'final_date': '2023-02-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'limit': 1000
+                },
+                {
+                    'category_id': 3,
+                    'limit': 2000
+                }
+            ]
+        }, format='json')
+
+        response = self.client.get(self.endpoint + '/current')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = response.json()
+
+        self.assertEqual(response['id'], 1)
+        self.assertEqual(response['initial_date'], '2020-01-01')
+        self.assertEqual(response['final_date'], '2023-02-01')
+        self.assertEqual(response['details'][0]['category']['id'], 1)
+        self.assertEqual(response['details'][0]['limit'], 1000.00)
+        self.assertEqual(response['details'][1]['category']['id'], 3)
+        self.assertEqual(response['details'][1]['limit'], 2000.00)
+
+    def test_user_get_no_current_budget(self):
+        self.client.post(self.endpoint, {
+            'id': 1,
+            'initial_date': '2030-01-01',
+            'final_date': '2050-02-01',
+            'details': [
+                {
+                    'category_id': 4,
+                    'limit': 9778
+                },
+                {
+                    'category_id': 2,
+                    'limit': 1000
+                }
+            ]
+        }, format='json')
+
+        response = self.client.get(self.endpoint + '/current')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = response.json()
+
+        self.assertEqual(response, {})

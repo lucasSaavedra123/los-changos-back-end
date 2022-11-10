@@ -79,3 +79,18 @@ def budget(request):
             return Response(None, status=status.HTTP_200_OK)
     except KeyError as key_error_exception:
         return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+# Create your views here.
+@api_view(['GET', 'POST', 'PATCH', 'DELETE'])
+def current_budget(request):
+    try:
+        if request.method == 'GET':
+            current_user_budget = Budget.current_budget_of(request.META['user'])
+
+            if current_user_budget is None:
+                return JsonResponse({}, safe=False)
+            else:
+                return JsonResponse(current_user_budget.as_dict, safe=False)
+
+    except KeyError as key_error_exception:
+        return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)

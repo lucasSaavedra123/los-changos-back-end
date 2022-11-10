@@ -33,6 +33,15 @@ class Budget(models.Model):
     def all_from_user(cls, user):
         return Budget.objects.filter(user=user)
 
+    @classmethod
+    def current_budget_of(cls, user):
+        current_budget = Budget.objects.filter(user=user, initial_date__lte=datetime.today().strftime('%Y-%m-%d'), final_date__gte=datetime.today().strftime('%Y-%m-%d'))
+
+        if len(current_budget) == 0:
+            return None
+        else:
+            return current_budget[0]
+
     @property
     def total_limit(self):
         details = Detail.objects.filter(assigned_budget=self)
