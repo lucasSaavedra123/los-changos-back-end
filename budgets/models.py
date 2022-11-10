@@ -60,7 +60,8 @@ class Budget(models.Model):
             'final_date': str(self.final_date),
             'details': [detail.as_dict for detail in Detail.from_budget(self)],
             'total_limit': float(self.total_limit),
-            'total_spent': float(self.total_spent)
+            'total_spent': float(self.total_spent),
+            'active': self.active
         }
 
     @property
