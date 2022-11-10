@@ -91,6 +91,3 @@ def current_budget(request):
                 return JsonResponse({}, safe=False)
             else:
                 return JsonResponse(current_user_budget.as_dict, safe=False)
-
-    except KeyError as key_error_exception:
-        return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)
