@@ -198,7 +198,7 @@ class TestCategoriesView(APITestCase):
 
     def test_user_creates_a_budget_and_then_he_modifies_it(self):
         response = self.client.post(self.endpoint, {
-            'initial_date': '2023-02-01',
+            'initial_date': '2022-02-01',
             'final_date': '2023-02-01',
             'details': [
                 {
@@ -297,7 +297,7 @@ class TestCategoriesView(APITestCase):
 
         response = self.client.get(self.endpoint)
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_user_cannot_delete_another_user_budget(self):
         another_user = User.objects.create(

@@ -79,6 +79,10 @@ class Budget(models.Model):
 
         super(Budget, self).save(*args, **kwargs)
 
+    @property
+    def active(self):
+        return self.initial_date < date.today() < self.final_date
+
 class Detail(models.Model):
     class Meta:
         constraints = [models.UniqueConstraint(fields=['assigned_budget', 'category'], name='category repetition is not available')]
@@ -137,6 +141,3 @@ class Detail(models.Model):
             total += expense.value
 
         return total
-
-    def active(self):
-        return self.initial_date < date.today() < self.final_date

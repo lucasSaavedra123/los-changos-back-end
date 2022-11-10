@@ -44,7 +44,7 @@ def budget(request):
             if budget_instance.user != request.META['user']:
                 return Response(None, status=status.HTTP_403_FORBIDDEN)
 
-            if not budget_instance.active():
+            if not budget_instance.active:
                 budget_instance.delete()
             else:
                 return Response({"message": f"Current budgets are neither editable and removable"}, status=status.HTTP_403_FORBIDDEN)
@@ -57,7 +57,7 @@ def budget(request):
             if budget.user != request.META['user']:
                 return Response(None, status=status.HTTP_403_FORBIDDEN)
 
-            if not budget_instance.active():
+            if not budget.active:
                 return Response({"message": f"Current budgets are neither editable and removable"}, status=status.HTTP_403_FORBIDDEN)
 
             else:
