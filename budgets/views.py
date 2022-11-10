@@ -83,11 +83,10 @@ def budget(request):
 # Create your views here.
 @api_view(['GET', 'POST', 'PATCH', 'DELETE'])
 def current_budget(request):
-    try:
-        if request.method == 'GET':
-            current_user_budget = Budget.current_budget_of(request.META['user'])
+    if request.method == 'GET':
+        current_user_budget = Budget.current_budget_of(request.META['user'])
 
-            if current_user_budget is None:
-                return JsonResponse({}, safe=False)
-            else:
-                return JsonResponse(current_user_budget.as_dict, safe=False)
+        if current_user_budget is None:
+            return JsonResponse({}, safe=False)
+        else:
+            return JsonResponse(current_user_budget.as_dict, safe=False)
