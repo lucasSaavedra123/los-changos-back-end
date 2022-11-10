@@ -240,6 +240,30 @@ class TestCategoriesView(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_user_cannot_update_another_user_budget(self):
+        another_user = User.objects.create(
+            firebase_uid=create_random_string(FIREBASE_UID_LENGTH))
+
+        Budget.objects.create(user=another_user, initial_date='2020-01-01', final_date='2025-01-01')
+
+        response = self.client.patch(self.endpoint, {
+            'id': 1,
+            'initial_date': '2023-01-01',
+            'final_date': '2023-02-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'limit': 1000
+                },
+                {
+                    'category_id': 3,
+                    'limit': 2000
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_user_has_no_provide_valid_token_to_read_budgets(self):
         def action(self):
             return self.client.get(self.endpoint)
