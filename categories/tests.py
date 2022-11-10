@@ -16,10 +16,8 @@ from users.models import User
 class TestCategoriesModel(TestCase):
 
     def setUp(self):
-        self.a_user = User.objects.create(
-            firebase_uid=create_random_string(FIREBASE_UID_LENGTH))
-        self.category_created = Category.objects.create(
-            user=self.a_user, name='Education', material_ui_icon_name='School')
+        self.a_user = User.objects.create(firebase_uid=create_random_string(FIREBASE_UID_LENGTH))
+        self.category_created = Category.objects.create(user=self.a_user, name='Education', material_ui_icon_name='School')
 
     def test_category_is_created_for_user(self):
         self.assertEqual(len(Category.categories_from_user(self.a_user)), 6)
@@ -33,8 +31,7 @@ class TestCategoriesModel(TestCase):
 
     def test_two_categories_with_same_name_should_not_be_created_for_a_user(self):
         with self.assertRaises(ValidationError):
-            Category.objects.create(
-                user=self.a_user, name='Education', material_ui_icon_name='Car')
+            Category.objects.create(user=self.a_user, name='Education', material_ui_icon_name='Car')
 
     def test_category_dictionary_serialization(self):
         self.assertEqual(self.category_created.as_dict['id'], self.category_created.id)

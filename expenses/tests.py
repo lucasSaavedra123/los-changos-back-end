@@ -513,7 +513,7 @@ class TestExponsesView(APITestCase):
 
         self.assertActionInSecureEnvironment(action)
 
-    def test_user_has_no_provide_valid_token_to_delete_expensey(self):
+    def test_user_has_no_provide_valid_token_to_delete_expense(self):
         def action(self):
             return self.client.delete(
             self.endpoint, {'id': 777}, format='json')
