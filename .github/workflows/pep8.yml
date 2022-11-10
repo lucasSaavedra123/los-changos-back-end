@@ -1,11 +1,11 @@
-name: Format Python Code
-on: push
-jobs:
-  autopep8:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: 'Run PEP8'
-        uses: quentinguidee/pep8-action@v1
-        with:
-          arguments: '--max-line-length=120'
+#name: Format Python Code
+#on: push
+#jobs:
+#  autopep8:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: 'Run PEP8'
+#        uses: quentinguidee/pep8-action@v1
+#        with:
+#          arguments: '--max-line-length=120'

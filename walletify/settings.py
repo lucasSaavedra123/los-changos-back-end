@@ -10,7 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+import os
 from pathlib import Path
+import firebase_admin
+import json
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,10 +27,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-j3r3l#6wm1-dh-e(torhql7mkcw+&y3q+wp*0^*m8asguklxzy'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+if os.environ.get('DEBUG') == "TRUE":
+    DEBUG = True
+else:
+    DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Application definition
 
@@ -37,12 +45,20 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'drf_yasg',
+    'users.apps.UsersConfig',
+    'expenses.apps.ExpensesConfig',
+    'categories.apps.CategoriesConfig',
 ]
 
 MIDDLEWARE = [
+    'walletify.middleware.CustomFirebaseAuthentication',
+    'walletify.middleware.CustomUserCreation',
+    'walletify.middleware.SanitizeRequest',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -73,14 +89,26 @@ WSGI_APPLICATION = 'walletify.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if os.environ.get('DATABASE') == "SQLITE":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
     }
-}
 
+elif os.environ.get('DATABASE') == "POSTGRES":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME'),
+            'HOST': os.environ.get('DB_HOST'),
+            'PORT': os.environ.get('DB_PORT'),
+            'USER': os.environ.get('DB_USER'),
+            'PASSWORD': os.environ.get('DB_PASSWORD'),
+            # 'OPTIONS': {'ssl': {'ca': os.environ.get('MYSQL_ATTR_SSL_CA')}}
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -99,7 +127,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
@@ -122,3 +149,24 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Create .json file
+FIREBASE_CONFIG_JSON = {
+    "type": os.environ.get('FIREBASE_TYPE'),
+    "project_id": os.environ.get('FIREBASE_TYPE_PROJECT_ID'),
+    "private_key_id": os.environ.get('FIREBASE_PRIVATE_KEY_ID'),
+    "private_key": os.environ.get('FIREBASE_PRIVATE_KEY_KEY').replace('\\n', '\n'),
+    "client_email": os.environ.get('FIREBASE_CLIENT_EMAIL'),
+    "client_id": os.environ.get('FIREBASE_CLIENT_ID'),
+    "auth_uri": os.environ.get('FIREBASE_AUTH_URI'),
+    "token_uri": os.environ.get('FIREBASE_TOKEN_URI'),
+    "auth_provider_x509_cert_url": os.environ.get('FIREBASE_AUTH_PROVIDER_X509_CERT_URL'),
+    "client_x509_cert_url": os.environ.get('FIREBASE_CLIENT_X509_CERT_URL')
+}
+
+with open('firebase-config.json', 'w') as file:
+    json.dump(FIREBASE_CONFIG_JSON, file)
+
+FIREBASE_CONFIG = os.path.join(BASE_DIR, 'firebase-config.json')
+FIREBASE_CREDS = firebase_admin.credentials.Certificate(FIREBASE_CONFIG)
+FIREBASE_APP = firebase_admin.initialize_app(FIREBASE_CREDS)
