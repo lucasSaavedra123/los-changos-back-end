@@ -26,7 +26,7 @@ schema_view = get_schema_view(
    openapi.Info(
       title="Walletify API",
       default_version='v1',
-      description="[TODO]",
+      description="Walletify Principal API Documentation",
       contact=openapi.Contact(email="TODO@TODO.COM"),
       license=openapi.License(name="MIT License"),
    ),
@@ -43,7 +43,8 @@ This exposes 4 endpoints:
     A ReDoc view of your API specification at /redoc/
 """
 
-"""walletify URL Configuration
+"""
+walletify URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/4.1/topics/http/urls/
