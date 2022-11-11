@@ -50,7 +50,7 @@ class TestCategoriesView(APITestCase):
         self.endpoint = '/category'
         self.static_categories_as_dict = [
             {'id': 1, 'material_ui_icon_name': 'AccountBalance',
-                'static': True, 'name': 'Impuestos Y Servicios', 'color': 'rgba(255,255,255,1)'},
+                'static': True, 'name': 'Impuestos Y Servicios', 'color': 'rgba(0,255,255,1)'},
             {'id': 2, 'material_ui_icon_name': 'Casino',
                 'static': True, 'name': 'Entretenimiento Y Ocio', 'color': 'rgba(0,255,0,1)'},
             {'id': 3, 'material_ui_icon_name': 'Home',
