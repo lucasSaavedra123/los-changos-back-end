@@ -130,7 +130,6 @@ class Detail(models.Model):
     @property
     def as_dict(self):
         return {
-            'id': self.id,
             'category': self.category.as_dict,
             'limit': float(self.limit),
             'spent': float(self.total_spent)

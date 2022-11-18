@@ -23,6 +23,23 @@ def budget(request):
             for budget in user_budgets:
                 budgets_as_dict.append(budget.as_dict)
 
+            all_categories_from_user = Category.categories_from_user(request.META['user'])
+
+            for budget_index in len(budgets_as_dict):
+                categories_that_are_in_budget = []
+
+                for detail in budgets_as_dict[budget_index]['details']:
+                    categories_that_are_in_budget.append(detail['category']['id'])
+                
+
+                for user_category in all_categories_from_user:
+                    if user_category.id not in categories_that_are_in_budget:
+                        budgets_as_dict[budget_index]['details'].append({
+                            'category': user_category.as_dict,
+                            'limit':0,
+                            'spent': 0
+                        })
+
             return JsonResponse(budgets_as_dict, safe=False)
 
         elif request.method == 'POST':
