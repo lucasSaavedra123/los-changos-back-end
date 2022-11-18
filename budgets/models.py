@@ -82,10 +82,9 @@ class Budget(models.Model):
         if self.final_date < self.initial_date:
             raise ValidationError("Budget initial date should be earlier than final date.")
 
-        if not update:
-            for budget in Budget.all_from_user(self.user):
-                if (budget.initial_date <= self.final_date <= budget.final_date or budget.initial_date <= self.initial_date <= budget.final_date):
-                    raise ValidationError("Budget is overlapping with another one.")
+        for budget in Budget.all_from_user(self.user):
+            if (budget.initial_date <= self.final_date <= budget.final_date or budget.initial_date <= self.initial_date <= budget.final_date):
+                raise ValidationError("Budget is overlapping with another one.")
 
         super(Budget, self).save(*args, **kwargs)
 
