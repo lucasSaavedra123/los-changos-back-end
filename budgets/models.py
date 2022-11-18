@@ -91,8 +91,8 @@ class Budget(models.Model):
         if self.final_date < self.initial_date:
             raise ValidationError("Budget initial date should be earlier than final date.")
 
-        if not update:
-            for budget in Budget.all_from_user(self.user):
+        for budget in Budget.all_from_user(self.user):
+            if not (update and budget.id == self.id):
                 if (budget.initial_date <= self.final_date <= budget.final_date or budget.initial_date <= self.initial_date <= budget.final_date):
                     raise ValidationError("Budget is overlapping with another one.")
 
@@ -139,7 +139,6 @@ class Detail(models.Model):
     @property
     def as_dict(self):
         return {
-            'id': self.id,
             'category': self.category.as_dict,
             'limit': float(self.limit),
             'spent': float(self.total_spent)
