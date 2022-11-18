@@ -25,7 +25,7 @@ def budget(request):
 
             all_categories_from_user = Category.categories_from_user(request.META['user'])
 
-            for budget_index in len(budgets_as_dict):
+            for budget_index in range(len(budgets_as_dict)):
                 categories_that_are_in_budget = []
 
                 for detail in budgets_as_dict[budget_index]['details']:
