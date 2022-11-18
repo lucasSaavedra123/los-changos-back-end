@@ -61,7 +61,8 @@ class Budget(models.Model):
             'details': [detail.as_dict for detail in Detail.from_budget(self)],
             'total_limit': float(self.total_limit),
             'total_spent': float(self.total_spent),
-            'active': self.active
+            'active': self.active,
+            'editable': self.editable,
         }
 
     @property
@@ -72,6 +73,14 @@ class Budget(models.Model):
             total += detail.total_spent
 
         return total
+
+    @property
+    def editable(self):
+        return not self.active and not self.has_began
+    
+    @property
+    def has_began(self):
+        return self.initial_date < date.today()
 
     def add_detail(self, category, limit):
         return Detail.objects.create(category=category, limit=limit, assigned_budget=self)
