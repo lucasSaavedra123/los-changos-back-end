@@ -193,6 +193,7 @@ class TestCategoriesView(APITestCase):
         self.assertEqual(first_budget['details'][0]['spent'], 0)
         self.assertEqual(first_budget['total_limit'], 5000)
         self.assertEqual(first_budget['total_spent'], 0)
+        self.assertEqual(first_budget['editable'], True)
 
     def test_user_creates_a_budget_and_then_he_modifies_it(self):
         response = self.client.post(self.endpoint, {
@@ -234,6 +235,7 @@ class TestCategoriesView(APITestCase):
 
         self.assertEqual(response['id'], 1)
         self.assertEqual(response['initial_date'], '2021-01-01')
+        self.assertEqual(response['editable'], False)
         self.assertEqual(response['final_date'], '2023-02-01')
         self.assertEqual(response['details'][0]['category']['id'], 1)
         self.assertEqual(response['details'][0]['limit'], 1000.00)
