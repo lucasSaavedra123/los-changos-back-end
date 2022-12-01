@@ -82,7 +82,7 @@ class Budget(models.Model):
     def has_began(self):
         return self.initial_date < date.today()
 
-    def add_detail(self, category, limit):
+    def add_limit(self, category, limit):
         return Detail.objects.create(category=category, limit=limit, assigned_budget=self)
 
     def save(self, *args, update=False, **kwargs):

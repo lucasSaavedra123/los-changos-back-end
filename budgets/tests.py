@@ -21,23 +21,23 @@ class TestCategoriesModel(TestCase):
     
     def test_a_budget_is_created_and_has_a_total_limit_with_one_category(self):
         new_budget = Budget.objects.create(user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
-        new_budget.add_detail(Category.objects.all()[0], 50000.0)
+        new_budget.add_limit(Category.objects.all()[0], 50000.0)
         self.assertEqual(new_budget.total_limit, 50000.0)
 
     def test_a_budget_is_created_and_has_a_total_limit_with_more_categories(self):
         new_budget = Budget.objects.create(user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
 
-        new_budget.add_detail(Category.objects.all()[0], 10000)
-        new_budget.add_detail(Category.objects.all()[1], 10000)
-        new_budget.add_detail(Category.objects.all()[2], 15000)
+        new_budget.add_limit(Category.objects.all()[0], 10000)
+        new_budget.add_limit(Category.objects.all()[1], 10000)
+        new_budget.add_limit(Category.objects.all()[2], 15000)
 
         self.assertEqual(new_budget.total_limit, 35000)
 
     def test_a_budget_cannot_be_created_with_details_of_same_category(self):
         with self.assertRaises(Exception) as raised:  # top level exception as we want to figure out its exact type
             new_budget = Budget.objects.create(user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
-            new_budget.add_detail(Category.objects.all()[0], 10000)
-            new_budget.add_detail(Category.objects.all()[0], 50000)
+            new_budget.add_limit(Category.objects.all()[0], 10000)
+            new_budget.add_limit(Category.objects.all()[0], 50000)
 
         self.assertEqual(IntegrityError, type(raised.exception))
 
@@ -82,9 +82,9 @@ class TestCategoriesModel(TestCase):
         new_budget = Budget.objects.create(user=self.a_user, initial_date='2020-01-01', final_date='2025-01-01')
 
         details = [
-            new_budget.add_detail(Category.objects.all()[0], 10000),
-            new_budget.add_detail(Category.objects.all()[1], 10000),
-            new_budget.add_detail(Category.objects.all()[2], 15000)
+            new_budget.add_limit(Category.objects.all()[0], 10000),
+            new_budget.add_limit(Category.objects.all()[1], 10000),
+            new_budget.add_limit(Category.objects.all()[2], 15000)
         ]
 
         Expense.create_expense_for_user(self.a_user, date='2021-01-30', value=5000, category=Category.objects.all()[0], name='New Expense')
@@ -98,9 +98,9 @@ class TestCategoriesModel(TestCase):
         new_budget = Budget.objects.create(user=self.a_user, initial_date='2020-01-01', final_date='2025-01-01')
 
         details = [
-            new_budget.add_detail(Category.objects.all()[0], 10000),
-            new_budget.add_detail(Category.objects.all()[1], 10000),
-            new_budget.add_detail(Category.objects.all()[2], 15000)
+            new_budget.add_limit(Category.objects.all()[0], 10000),
+            new_budget.add_limit(Category.objects.all()[1], 10000),
+            new_budget.add_limit(Category.objects.all()[2], 15000)
         ]
 
         Expense.create_expense_for_user(self.a_user, date='2021-02-05', value=5000, category=Category.objects.all()[0], name='New Expense')

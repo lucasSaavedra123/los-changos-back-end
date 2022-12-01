@@ -52,7 +52,7 @@ def budget(request):
 
             for detail in request_body['details']:
                 if detail['limit'] > 0:
-                    new_budget.add_detail(Category.objects.get(id=detail['category_id']), detail['limit'])
+                    new_budget.add_limit(Category.objects.get(id=detail['category_id']), detail['limit'])
 
             return Response(None, status=status.HTTP_201_CREATED)
 
@@ -91,7 +91,7 @@ def budget(request):
 
                 for detail in request_body['details']:
                     if detail['limit'] > 0:
-                        budget.add_detail(Category.objects.get(id=detail['category_id']), detail['limit'])
+                        budget.add_limit(Category.objects.get(id=detail['category_id']), detail['limit'])
 
                 budget.save(update=True)
 
