@@ -113,6 +113,12 @@ class TestCategoriesModel(TestCase):
         self.assertEqual(details[2].total_spent, 0)
         self.assertEqual(new_budget.total_spent, 12500)
 
+    def test_user_add_to_budget_future_expense(self):
+        """
+        Write the test
+        """
+
+
 
 class TestCategoriesView(APITestCase):
     def assertActionInSecureEnvironment(self, action):
