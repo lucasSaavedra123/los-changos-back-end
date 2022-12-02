@@ -14,7 +14,7 @@ from django.db.utils import IntegrityError
 from expenses.models import Expense
 
 # Create your tests here.
-class TestCategoriesModel(TestCase):
+class TestBudgetsModel(TestCase):
 
     def setUp(self):
         self.a_user = User.objects.create(firebase_uid=create_random_string(FIREBASE_UID_LENGTH))
@@ -127,7 +127,7 @@ class TestCategoriesModel(TestCase):
         self.assertEqual(details[2].name, 'AySa Bill')
 
 
-class TestCategoriesView(APITestCase):
+class TestBudgetsView(APITestCase):
     def assertActionInSecureEnvironment(self, action):
         os.environ["ENVIRONMENT"] = "PROD"
         self.assertEqual(action(self).status_code, status.HTTP_401_UNAUTHORIZED)

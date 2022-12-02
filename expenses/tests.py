@@ -207,7 +207,7 @@ class TestExpensesModel(TestCase):
         self.assertEqual(filtered_expenses[2], old_expense)
 
 
-class TestExponsesView(APITestCase):
+class TestExpensesView(APITestCase):
     def assertActionInSecureEnvironment(self, action):
         os.environ["ENVIRONMENT"] = "PROD"
         self.assertEqual(action(self).status_code, status.HTTP_401_UNAUTHORIZED)
