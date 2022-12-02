@@ -113,7 +113,7 @@ class TestBudgetsModel(TestCase):
         self.assertEqual(details[2].total_spent, 0)
         self.assertEqual(new_budget.total_spent, 12500)
 
-    def test_user_add_to_budget_future_expense(self):
+    def test_user_add_to_budget_future_expense_along_limits_details(self):
         new_budget = Budget.objects.create(user=self.a_user, initial_date='2020-01-01', final_date='2025-01-01')
 
         details = [
@@ -136,7 +136,7 @@ class TestBudgetsView(APITestCase):
     def setUp(self):
         self.endpoint = '/budget'
 
-    def test_create_one_budge_with_one_detail_for_user(self):
+    def test_create_one_budge_with_one_limit_detail_for_user(self):
         response = self.client.post(self.endpoint, {
             'initial_date': '2023-05-01',
             'final_date': '2023-06-01',
@@ -150,10 +150,26 @@ class TestBudgetsView(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_create_one_budge_with_one_future_expense_detail_for_user(self):
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2023-05-01',
+            'final_date': '2024-06-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'value': 5000,
+                    'date': '2023-11-05',
+                    'name': 'AySa Bill'
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
     def test_create_one_budget_but_one_field_is_not_included(self):
         response = self.client.post(self.endpoint, {
             'initial_date': '2023-05-01',
-            'final_date': '2023-06-01',
+            'final_date': '2029-06-01',
             'details': [
                 {
                     'category_id': 1,
