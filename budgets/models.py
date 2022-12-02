@@ -44,7 +44,7 @@ class Budget(models.Model):
 
     @property
     def total_limit(self):
-        details = Detail.objects.filter(assigned_budget=self)
+        details = LimitDetail.objects.filter(assigned_budget=self)
         total = 0
 
         for detail in details:
@@ -69,7 +69,7 @@ class Budget(models.Model):
     def total_spent(self):
         total = 0
 
-        for detail in Detail.objects.filter(assigned_budget=self):
+        for detail in LimitDetail.objects.filter(assigned_budget=self):
             total += detail.total_spent
 
         return total
@@ -83,7 +83,10 @@ class Budget(models.Model):
         return self.initial_date < date.today()
 
     def add_limit(self, category, limit):
-        return Detail.objects.create(category=category, limit=limit, assigned_budget=self)
+        return LimitDetail.objects.create(category=category, value=limit, assigned_budget=self)
+
+    def add_future_expense(self, category, value, name, expiration_date):
+        return FutureExpenseDetail.objects.create(category=category, value=value, assigned_budget=self, expiration_date=expiration_date, name=name)
 
     def save(self, *args, update=False, **kwargs):
         self.full_clean()
@@ -104,9 +107,7 @@ class Budget(models.Model):
 
 class Detail(models.Model):
     class Meta:
-        constraints = [models.UniqueConstraint(fields=['assigned_budget', 'category'], name='category repetition is not available')]
-
-    id = models.AutoField(primary_key=True)   
+        abstract = True
 
     category = models.ForeignKey(
         Category,
@@ -117,12 +118,6 @@ class Detail(models.Model):
         editable=True
     )
 
-    limit = models.DecimalField(
-        max_digits=11,
-        decimal_places=2,
-        default=0.01,
-        validators=[MinValueValidator(0.01)])  # Up to $100,000,000
-    
     assigned_budget = models.ForeignKey(
         Budget,
         on_delete=models.CASCADE,
@@ -132,9 +127,21 @@ class Detail(models.Model):
         editable=True
     )
 
+    id = models.AutoField(primary_key=True)   
+
+    value = models.DecimalField(
+        max_digits=11,
+        decimal_places=2,
+        default=0.01,
+        validators=[MinValueValidator(0.01)])  # Up to $100,000,000
+
     @classmethod
     def from_budget(cls, budget):
-        return cls.objects.filter(assigned_budget=budget)
+        return list(LimitDetail.objects.filter(assigned_budget=budget)) + list(FutureExpenseDetail.objects.filter(assigned_budget=budget))
+
+class LimitDetail(Detail):
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['assigned_budget', 'category'], name='category repetition in limit detail is not allowed')]
 
     @property
     def as_dict(self):
@@ -143,6 +150,10 @@ class Detail(models.Model):
             'limit': float(self.limit),
             'spent': float(self.total_spent)
         }
+    
+    @property
+    def limit(self):
+        return self.value
 
     @property
     def total_spent(self):
@@ -159,3 +170,38 @@ class Detail(models.Model):
             total += expense.value
 
         return total
+
+class FutureExpenseDetail(Detail):
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['assigned_budget', 'category'], name='category repetition in future expense detail is not allowed')]
+
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        default=None,
+        null=True,
+        blank=True,
+        editable=True
+    )
+
+    assigned_budget = models.ForeignKey(
+        Budget,
+        on_delete=models.CASCADE,
+        default=None,
+        null=True,
+        blank=True,
+        editable=True
+    )
+
+    name = models.CharField(max_length=50, null=True)
+
+    expiration_date = models.DateField(validators=[], null=True)
+
+    @property
+    def as_dict(self):
+        return {
+            'category': self.category.as_dict,
+            'value': float(self.value),
+            'spent': float(self.total_spent)
+        }
+

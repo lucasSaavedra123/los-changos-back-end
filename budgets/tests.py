@@ -114,10 +114,17 @@ class TestCategoriesModel(TestCase):
         self.assertEqual(new_budget.total_spent, 12500)
 
     def test_user_add_to_budget_future_expense(self):
-        """
-        Write the test
-        """
+        new_budget = Budget.objects.create(user=self.a_user, initial_date='2020-01-01', final_date='2025-01-01')
 
+        details = [
+            new_budget.add_limit(Category.objects.all()[0], 10000),
+            new_budget.add_limit(Category.objects.all()[1], 10000),
+            new_budget.add_future_expense(Category.objects.all()[4], 4500, 'AySa Bill', '2023-01-01')
+        ]
+
+        self.assertEqual(details[2].value, 4500)
+        self.assertEqual(details[2].expiration_date, '2023-01-01')
+        self.assertEqual(details[2].name, 'AySa Bill')
 
 
 class TestCategoriesView(APITestCase):

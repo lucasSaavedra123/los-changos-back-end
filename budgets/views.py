@@ -86,7 +86,7 @@ def budget(request):
                     detail['limit']
                     detail['category_id']
 
-                for detail in Detail.objects.filter(assigned_budget=budget):
+                for detail in Detail.from_budget(budget):
                     detail.delete()
 
                 for detail in request_body['details']:
