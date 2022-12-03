@@ -202,6 +202,6 @@ class FutureExpenseDetail(Detail):
         return {
             'category': self.category.as_dict,
             'value': float(self.value),
-            'spent': float(self.total_spent)
+            'name': self.name,
+            'expiration date': self.expiration_date
         }
-
