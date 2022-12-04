@@ -51,8 +51,12 @@ def budget(request):
             )
 
             for detail in request_body['details']:
-                if detail['limit'] > 0:
-                    new_budget.add_detail(Category.objects.get(id=detail['category_id']), detail['limit'])
+                if 'limit' in detail and detail['limit'] > 0:
+                    new_budget.add_limit(Category.objects.get(id=detail['category_id']), detail['limit'])
+                elif 'value' in detail and detail['value'] > 0:
+                    new_budget.add_future_expense(Category.objects.get(id=detail['category_id']), detail['value'], detail['name'], detail['expiration_date'])
+                else:
+                    return Response({"message": f"Request should include in details field limit and value for limit or future expense detail respectively"}, status=status.HTTP_400_BAD_REQUEST)
 
             return Response(None, status=status.HTTP_201_CREATED)
 
@@ -86,12 +90,12 @@ def budget(request):
                     detail['limit']
                     detail['category_id']
 
-                for detail in Detail.objects.filter(assigned_budget=budget):
+                for detail in Detail.from_budget(budget):
                     detail.delete()
 
                 for detail in request_body['details']:
                     if detail['limit'] > 0:
-                        budget.add_detail(Category.objects.get(id=detail['category_id']), detail['limit'])
+                        budget.add_limit(Category.objects.get(id=detail['category_id']), detail['limit'])
 
                 budget.save(update=True)
 
