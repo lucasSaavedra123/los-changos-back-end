@@ -1,5 +1,5 @@
 asgiref==3.4.1
-backports.zoneinfo==0.2.1
+#backports.zoneinfo==0.2.1
 CacheControl==0.12.11
 cachetools==5.2.0
 certifi==2022.9.24
@@ -23,11 +23,11 @@ grpcio-status==1.49.1
 httplib2==0.20.4
 idna==3.4
 msgpack==1.0.4
-mysqlclient==2.1.0
+#mysqlclient==2.1.0
 proto-plus==1.22.1
 protobuf==4.21.7
-psycopg2==2.9.3
-psycopg2-binary==2.9.3
+#psycopg2==2.9.3
+#psycopg2-binary==2.9.3
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pyparsing==3.0.9
