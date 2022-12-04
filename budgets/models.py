@@ -172,9 +172,6 @@ class LimitDetail(Detail):
         return total
 
 class FutureExpenseDetail(Detail):
-    class Meta:
-        constraints = [models.UniqueConstraint(fields=['assigned_budget', 'category'], name='category repetition in future expense detail is not allowed')]
-
     category = models.ForeignKey(
         Category,
         on_delete=models.CASCADE,
@@ -203,5 +200,5 @@ class FutureExpenseDetail(Detail):
             'category': self.category.as_dict,
             'value': float(self.value),
             'name': self.name,
-            'expiration date': self.expiration_date
+            'expiration_date': self.expiration_date
         }
