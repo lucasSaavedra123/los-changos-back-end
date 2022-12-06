@@ -12,7 +12,8 @@ def update_categories_color(apps, schema_editor):
         2: "rgba(0,255,0,1)",
         3: "rgba(0,255,124,1)",
         4: "rgba(255,0,0,1)",
-        5: "rgba(255,0,255,1)"
+        5: "rgba(255,0,255,1)",
+        6: "rgba(255,0,199,1)"
     }
 
     for category in Category.objects.all():

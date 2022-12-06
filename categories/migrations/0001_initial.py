@@ -13,6 +13,7 @@ def populate_static_categories(apps, schema_editor):
         Category.objects.create(name="hogar y mercado", material_ui_icon_name="Home")
         Category.objects.create(name="buen vivir/antojos", material_ui_icon_name="EmojiEmotions")
         Category.objects.create(name="electrodomesticos", material_ui_icon_name="Kitchen")
+        Category.objects.create(name="Ingresos", material_ui_icon_name="AccountBalance")
 
 
 class Migration(migrations.Migration):

@@ -62,7 +62,8 @@ class TestExpensesModel(TestCase):
             'value': 250.5,
             'category': self.category_for_expense.as_dict,
             'name': "Custom Expense",
-            'date': '2022-05-12'
+            'date': '2022-05-12',
+            'expense': 'true'
         })
 
     def test_expense_from_one_date_is_obtained(self):
