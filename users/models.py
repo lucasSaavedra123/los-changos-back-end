@@ -12,3 +12,4 @@ class User(models.Model):
         unique=True,
         validators=[MinLengthValidator(FIREBASE_UID_LENGTH)]
     ) # UID is 28 characters long
+    alias=models.CharField(max_length=10, unique=True)

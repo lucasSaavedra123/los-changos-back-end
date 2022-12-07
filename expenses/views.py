@@ -11,6 +11,7 @@ from rest_framework import status
 from categories.models import Category
 
 from .models import Expense
+from users.models import User
 
 # Create your views here.
 
@@ -32,14 +33,37 @@ def expense(request):
         elif request.method == 'POST':
             category = Category.objects.get(id=request_body['category_id'])
 
-            Expense.create_expense_for_user(
+            if request_body['type'] == 'transfer_send':
+                Expense.create_expense_for_user(
                 request.META['user'],
                 value=request_body['value'],
                 category=category,
                 date=request_body['date'],
-                name=request_body['name'],
-                type=request_body['type'],
-            )
+                name="Transferencia enviada",
+                type=request_body['type']
+                )
+
+                
+                user = User.objects.get(alias=request_body['alias'])
+                income_category = Category.objects.get(id=6)
+                
+                Expense.create_expense_for_user(
+                user,
+                value=request_body['value'],
+                category=income_category,
+                date=request_body['date'],
+                name="Transferencia recibida",
+                type="transfer_receive"
+                )
+            else:   
+                Expense.create_expense_for_user(
+                    request.META['user'],
+                    value=request_body['value'],
+                    category=category,
+                    date=request_body['date'],
+                    name=request_body['name'],
+                    type=request_body['type'],
+                )
 
             return Response(None, status=status.HTTP_201_CREATED)
 
