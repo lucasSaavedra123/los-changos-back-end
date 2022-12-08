@@ -12,3 +12,13 @@ class User(models.Model):
         unique=True,
         validators=[MinLengthValidator(FIREBASE_UID_LENGTH)]
     ) # UID is 28 characters long
+    alias = models.CharField(max_length=10, unique=True)
+
+
+    @property
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'firebase_uid': self.firebase_uid,
+            'alias': self.alias
+        }

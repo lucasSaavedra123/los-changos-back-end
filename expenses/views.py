@@ -11,6 +11,7 @@ from rest_framework import status
 from categories.models import Category
 
 from .models import Expense
+from sharedExpenses.models import SharedExpense
 
 # Create your views here.
 
@@ -21,17 +22,30 @@ def expense(request):
 
     try:
         if request.method == 'GET':
+            #esto es lo que no anda cuando usuario 1 hace el gasto
+            #y usuario 2 no puede verlo como un gasto compartido
             user_expenses = Expense.expenses_from_user(request.META['user'])
+            user_shared_expenses = SharedExpense.expenses_user_made_with_me(request.META['user'])
+            #user_shared_expenses = SharedExpense.expenses_from_user(request.META['user'])
+            ##nueva idea buscar en las shared expenses el id y traigo el expense entonces no mezclo clases
+            ## sharedUser =  User.objects.get(alias=request_body['userToShare'])
+            ## if user.id != sharedUser.id:
+            ##     user_shared_expenses = SharedExpense.expenses_from_user(sharedUser)
+
+            
             expenses_as_dict = []
 
             for expense in user_expenses:
+                expenses_as_dict.append(expense.as_dict)
+
+            for expense in user_shared_expenses:
                 expenses_as_dict.append(expense.as_dict)
 
             return JsonResponse(expenses_as_dict, safe=False)
 
         elif request.method == 'POST':
             category = Category.objects.get(id=request_body['category_id'])
-
+            
             Expense.create_expense_for_user(
                 request.META['user'],
                 value=request_body['value'],
@@ -88,9 +102,19 @@ def expense_filter(request):
                 date(*first_date),
                 date(*second_date)
             )
-
+            sharedExpenses= SharedExpense.filter_within_timeline_from_otherUser(
+                request.META['user'],
+                date(*first_date),
+                date(*second_date)
+            )
+           
+            
             for expense in expenses:
                 response.append(expense.as_dict)
+          
+            for expense in sharedExpenses:
+                response.append(expense.as_dict)
+
         else:
             if isinstance(request_body['category_id'], Sequence):
                 expenses = Expense.objects.none()
@@ -103,7 +127,18 @@ def expense_filter(request):
                     Category.objects.get(id=category_id)
                     )
 
+                    sharedExpenses = SharedExpense.filter_by_category_within_timeline_from_otherUser(
+                    request.META['user'],
+                    date(*first_date),
+                    date(*second_date),
+                    Category.objects.get(id=category_id)
+                    )
+                    
+
                     for expense in expenses:
+                        response.append(expense.as_dict)
+                    
+                    for expense in sharedExpenses:
                         response.append(expense.as_dict)
 
             else:
@@ -113,8 +148,18 @@ def expense_filter(request):
                     date(*second_date),
                     Category.objects.get(id=request_body['category_id'])
                 )
+                sharedExpenses= SharedExpense.filter_by_category_within_timeline_from_otherUser(
+                    request.META['user'],
+                    date(*first_date),
+                    date(*second_date),
+                    Category.objects.get(id=request_body['category_id'])
+                )
 
+            
                 for expense in expenses:
+                    response.append(expense.as_dict)
+              
+                for expense in sharedExpenses:
                     response.append(expense.as_dict)
 
         return JsonResponse(response, safe=False)

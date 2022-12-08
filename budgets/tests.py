@@ -55,13 +55,13 @@ class TestCategoriesModel(TestCase):
         self.assertEqual(len(Budget.all_from_user(self.a_user)), 2)
 
     def test_user_cannot_create_two_budgets_that_overlap_slightly(self):
-        Budget.objects.create(user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
+        Budget.objects.create(user=self.a_user, initial_date='2022-12-19', final_date='2023-12-5')
 
         with self.assertRaisesMessage(ValidationError, "['Budget is overlapping with another one.']"):
             Budget.objects.create(user=self.a_user, initial_date='2023-12-5', final_date='2027-05-1')
 
         with self.assertRaisesMessage(ValidationError, "['Budget is overlapping with another one.']"):
-            Budget.objects.create(user=self.a_user, initial_date='2022-12-01', final_date='2022-12-5')
+            Budget.objects.create(user=self.a_user, initial_date='2022-12-16', final_date='2022-12-19')
 
     def test_user_cannot_create_two_budgets_that_overlap_partially(self):
         Budget.objects.create(user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
@@ -189,7 +189,7 @@ class TestCategoriesView(APITestCase):
 
         self.assertEqual(first_budget['initial_date'], '2023-05-01')
         self.assertEqual(first_budget['final_date'], '2023-06-01')
-        self.assertEqual(len(first_budget['details']), 5)
+        self.assertEqual(len(first_budget['details']), 6)
         self.assertEqual(first_budget['details'][0]['spent'], 0)
         self.assertEqual(first_budget['total_limit'], 5000)
         self.assertEqual(first_budget['total_spent'], 0)

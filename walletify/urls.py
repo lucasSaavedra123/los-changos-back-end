@@ -20,5 +20,7 @@ urlpatterns = [
     #path('admin/', admin.site.urls),
     path('expense', include('expenses.urls')),
     path('category', include('categories.urls')),
-    path('budget', include('budgets.urls'))
+    path('budget', include('budgets.urls')),
+    path('user', include('users.urls')),
+    path('sharedExpense', include('sharedExpenses.urls'))
 ]

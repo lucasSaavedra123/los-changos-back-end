@@ -20,11 +20,11 @@ class TestCategoriesModel(TestCase):
         self.category_created = Category.objects.create(user=self.a_user, name='Education', material_ui_icon_name='School')
 
     def test_category_is_created_for_user(self):
-        self.assertEqual(len(Category.categories_from_user(self.a_user)), 6)
+        self.assertEqual(len(Category.categories_from_user(self.a_user)), 7)
 
     def test_category_from_user_is_deleted(self):
         self.category_created.delete()
-        self.assertEqual(len(Category.categories_from_user(self.a_user)), 5)
+        self.assertEqual(len(Category.categories_from_user(self.a_user)), 6)
 
     def test_created_category_is_not_static(self):
         self.assertFalse(self.category_created.static)
@@ -58,7 +58,9 @@ class TestCategoriesView(APITestCase):
             {'id': 4, 'material_ui_icon_name': 'EmojiEmotions',
                 'static': True, 'name': 'Buen Vivir/Antojos', 'color': 'rgba(255,0,0,1)'},
             {'id': 5, 'material_ui_icon_name': 'Kitchen',
-                'static': True, 'name': 'Electrodomesticos', 'color': 'rgba(255,0,255,1)'}
+                'static': True, 'name': 'Electrodomesticos', 'color': 'rgba(255,0,255,1)'},
+            {'id': 6, 'material_ui_icon_name': 'Group', 'static': True, 'name': 'Gastos Compartidos', 'color': 'rgba(255,255,0,1)'}
+            
         ]
 
     def test_user_creates_categories(self):
@@ -74,7 +76,7 @@ class TestCategoriesView(APITestCase):
             'material_ui_icon_name': 'Apple'
         }, format='json')
 
-        response = self.client.delete(self.endpoint, {'id': '6'}, format='json')
+        response = self.client.delete(self.endpoint, {'id': '7'}, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -111,8 +113,8 @@ class TestCategoriesView(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         expected_response = self.static_categories_as_dict + \
-            [{'id': 6, 'material_ui_icon_name': 'BorderColor',
-                'static': False, 'name': 'Custom Category', 'color': Category.objects.get(id=6).color}]
+            [{'id': 7, 'material_ui_icon_name': 'BorderColor',
+                'static': False, 'name': 'Custom Category', 'color': Category.objects.get(id=7).color}]
 
         self.assertEqual(response.json(), expected_response)
 
@@ -123,7 +125,7 @@ class TestCategoriesView(APITestCase):
         }, format='json')
 
         self.client.patch(self.endpoint, {
-            'id': 6,
+            'id': 7,
             'name': 'Energy',
             'material_ui_icon_name': 'Bolt'
         }, format='json')
@@ -133,8 +135,8 @@ class TestCategoriesView(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         expected_response = self.static_categories_as_dict + \
-            [{'id': 6, 'material_ui_icon_name': 'Bolt',
-                'static': False, 'name': 'Energy', 'color': Category.objects.get(id=6).color}]
+            [{'id': 7, 'material_ui_icon_name': 'Bolt',
+                'static': False, 'name': 'Energy', 'color': Category.objects.get(id=7).color}]
 
         self.assertEqual(response.json(), expected_response)
 
@@ -145,7 +147,7 @@ class TestCategoriesView(APITestCase):
         }, format='json')
 
         self.client.patch(self.endpoint, {
-            'id': 6,
+            'id': 7,
             'name': 'Another category name',
             'material_ui_icon_name': 'BorderColor'
         }, format='json')
@@ -155,8 +157,8 @@ class TestCategoriesView(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         expected_response = self.static_categories_as_dict + \
-            [{'id': 6, 'material_ui_icon_name': 'BorderColor',
-                'static': False, 'name': 'Another Category Name', 'color': Category.objects.get(id=6).color}]
+            [{'id': 7, 'material_ui_icon_name': 'BorderColor',
+                'static': False, 'name': 'Another Category Name', 'color': Category.objects.get(id=7).color}]
 
         self.assertEqual(response.json(), expected_response)
 
@@ -169,7 +171,7 @@ class TestCategoriesView(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         response = self.client.patch(self.endpoint, {
-            'id': 6,
+            'id': 7,
             'name': 'Custom Category',
             'material_ui_icon_name': 'Bolt'
         }, format='json')
@@ -181,8 +183,8 @@ class TestCategoriesView(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         expected_response = self.static_categories_as_dict + \
-            [{'id': 6, 'material_ui_icon_name': 'Bolt',
-                'static': False, 'name': 'Custom Category', 'color': Category.objects.get(id=6).color}]
+            [{'id': 7, 'material_ui_icon_name': 'Bolt',
+                'static': False, 'name': 'Custom Category', 'color': Category.objects.get(id=7).color}]
 
         self.assertEqual(response.json(), expected_response)
 

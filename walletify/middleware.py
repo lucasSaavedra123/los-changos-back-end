@@ -18,7 +18,7 @@ class CustomFirebaseAuthentication:
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         if os.environ.get('ENVIRONMENT') == "DEV":
-            request.META['uid'] = 'randomrandomrandomrandomrand'
+            request.META['uid'] = 'usuario1'
         else:
             try:
                 authorization_header = request.META.get('HTTP_AUTHORIZATION')
@@ -44,11 +44,23 @@ class CustomUserCreation:
     def __call__(self, request):
         response = self.get_response(request)
         return response
+    
+    def createRandomNotRepeatedAlias(self):
+        import random
+        import string
+
+        alias = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
+
+        if User.objects.filter(alias=alias):
+            return self.createRandomNotRepeatedAlias()
+        else:
+            return alias
+
 
     def process_view(self, request, view_func, view_args, view_kwargs):
 
         if not User.objects.filter(firebase_uid=request.META['uid']):
-            User.objects.create(firebase_uid=request.META['uid'])
+            User.objects.create(firebase_uid=request.META['uid'],alias=self.createRandomNotRepeatedAlias())
 
         request.META['user'] = User.objects.get(firebase_uid=request.META['uid'])
 

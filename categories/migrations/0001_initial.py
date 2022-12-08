@@ -13,7 +13,7 @@ def populate_static_categories(apps, schema_editor):
         Category.objects.create(name="hogar y mercado", material_ui_icon_name="Home")
         Category.objects.create(name="buen vivir/antojos", material_ui_icon_name="EmojiEmotions")
         Category.objects.create(name="electrodomesticos", material_ui_icon_name="Kitchen")
-
+        Category.objects.create(name="gastos compartidos", material_ui_icon_name="Group",shareExpense=True)
 
 class Migration(migrations.Migration):
 
@@ -31,6 +31,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(default='Categoria Personalizada', max_length=50)),
                 ('material_ui_icon_name', models.CharField(default='Paid', max_length=50)),
                 ('user', models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE, to='users.user')),
+                ('shareExpense', models.BooleanField(default=False)),
             ],
         ),
         migrations.RunPython(populate_static_categories)
