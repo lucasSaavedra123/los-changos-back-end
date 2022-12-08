@@ -60,7 +60,7 @@ def sharedExpense(request):
         elif request.method == 'DELETE':
             expense_instace = SharedExpense.objects.get(id=request_body['id'])
 
-            if expense_instace.user != request.META['user']:
+            if expense_instace.userToShare != request.META['user']:
                 return Response(None, status=status.HTTP_403_FORBIDDEN)
 
             expense_instace.delete()
@@ -69,7 +69,7 @@ def sharedExpense(request):
         elif request.method == 'PATCH':
             expense = SharedExpense.objects.get(id=request_body['id'])
 
-            if expense.user != request.META['user']:
+            if expense.userToShare != request.META['user']:
                 return Response(None, status=status.HTTP_403_FORBIDDEN)
 
             expense.name = request_body['name']
@@ -84,3 +84,23 @@ def sharedExpense(request):
     except KeyError as key_error_exception:
         return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['PATCH'])
+def editSharedExpense(request):
+    request_body = request.META['body']
+
+    try:
+        if request.method == 'PATCH':
+            print(request_body)
+            expense = SharedExpense.objects.get(id=request_body['id'])
+            print(expense)
+            print(request.META['user'])
+
+            if expense.userToShare != request.META['user']:
+                return Response(None, status=status.HTTP_403_FORBIDDEN)
+
+            expense.aceptedTransaction = request_body['aceptedTransaction']
+            expense.save()
+
+            return Response(None, status=status.HTTP_200_OK)
+    except KeyError as key_error_exception:
+        return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)

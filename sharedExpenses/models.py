@@ -22,10 +22,15 @@ def validate_date_is_not_in_the_future(value):
 class SharedExpense(Expense):
     userToShare= models.ForeignKey(User, on_delete=models.CASCADE, related_name='userToShare')
     userToShareFlag= models.BooleanField(default=True)
+    aceptedTransaction = models.IntegerField(default=0)
 
     @classmethod
     def create_expense_for_user(cls, user, **kwargs):
         cls.objects.create(user=user, **kwargs)
+    
+    @classmethod
+    def expenses_user_made_with_me_ordered_by_flag(cls, user):
+        return cls.objects.order_by('-userToShareFlag').filter(userToShare=user)
 
     @classmethod
     def expenses_from_user(cls, user):
@@ -62,7 +67,8 @@ class SharedExpense(Expense):
             'value': float(self.value),
             'name': self.name,
             'userToShare': self.userToShare.as_dict,
-            'userToShareFlag': self.userToShareFlag
+            'userToShareFlag': self.userToShareFlag,
+            'aceptedTransaction': self.aceptedTransaction,
     }
     def save(self, *args, **kwargs):
         self.full_clean()

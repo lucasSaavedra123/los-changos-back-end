@@ -12,7 +12,7 @@ from categories.models import Category
 
 from .models import User
 @api_view(['GET'])
-def user(request):
+def getUsers(request):
 
 
     try:
@@ -29,4 +29,15 @@ def user(request):
     except KeyError as key_error_exception:
         return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-   
+@api_view(['GET'])
+def user(request):
+    
+    request_body = request.META['body']
+    try:
+        if request.method == 'GET':
+            user = User.objects.get(firebase_uid=request.META['uid'])
+
+            return JsonResponse(user.alias, safe=False)
+
+    except KeyError as key_error_exception:
+        return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)
