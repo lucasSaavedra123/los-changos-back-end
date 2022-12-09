@@ -21,19 +21,29 @@ class TestExpensesModel(TestCase):
             firebase_uid=create_random_string(FIREBASE_UID_LENGTH))
         self.category_for_expense = Category.objects.all()[0]
         self.another_category = Category.objects.all()[1]
+        self.income_created = Expense.objects.create(
+            user=self.a_user,
+            value=250.5,
+            date='2022-05-12',
+            category=self.category_for_expense,
+            type="income",
+            name="Custom Expense"
+        )
         self.expense_created = Expense.objects.create(
             user=self.a_user,
             value=250.5,
             date='2022-05-12',
             category=self.category_for_expense,
-            name="Custom Expense"
+            name="Custom Expense",
+            type="expense"
         )
 
     def test_expense_is_created_for_user(self):
-        self.assertEqual(len(Expense.expenses_from_user(self.a_user)), 1)
+        self.assertEqual(len(Expense.expenses_from_user(self.a_user)), 2)
 
     def test_expense_from_user_is_deleted(self):
         self.expense_created.delete()
+        self.income_created.delete()
         self.assertEqual(len(Expense.expenses_from_user(self.a_user)), 0)
 
     def test_future_expenses_cannot_be_created(self):
@@ -43,7 +53,8 @@ class TestExpensesModel(TestCase):
                 value=1500,
                 date='2988-01-01',
                 category=self.category_for_expense,
-                name="Custom Expense"
+                name="Custom Expense",
+                type="expense"
             )
 
     def test_negative_expenses_cannot_be_created(self):
@@ -53,25 +64,16 @@ class TestExpensesModel(TestCase):
                 value=-58.25,
                 date='2015-01-01',
                 category=self.category_for_expense,
-                name="Custom Expense"
+                name="Custom Expense",
+                type="expense"
             )
-
-    def test_expense_dictionary_serialization(self):
-        self.assertDictEqual(self.expense_created.as_dict, {
-            'id': self.expense_created.id,
-            'value': 250.5,
-            'category': self.category_for_expense.as_dict,
-            'name': "Custom Expense",
-            'date': '2022-05-12',
-            'expense': 'true'
-        })
 
     def test_expense_from_one_date_is_obtained(self):
         a_date = date(2022, 5, 12)
         filtered_expenses = Expense.filter_within_timeline_from_user(self.a_user, a_date, a_date)
 
-        self.assertEqual(len(filtered_expenses), 1)
-        self.assertEqual(filtered_expenses[0], self.expense_created)
+        self.assertEqual(len(filtered_expenses), 2)
+        self.assertEqual(filtered_expenses[1], self.expense_created)
 
     def test_expenses_from_one_date_are_obtained(self):
         self.another_expense_created = Expense.objects.create(
@@ -79,133 +81,142 @@ class TestExpensesModel(TestCase):
             value=240,
             date='2022-05-12',
             category=self.category_for_expense,
-            name="Another custom expense"
+            name="Another custom expense",
+            type="expense"
         )
 
         a_date = date(2022, 5, 12)
         filtered_expenses = Expense.filter_within_timeline_from_user(self.a_user, a_date, a_date)
-
-        self.assertEqual(len(filtered_expenses), 2)
-        self.assertEqual(filtered_expenses[0], self.expense_created)
-        self.assertEqual(filtered_expenses[1], self.another_expense_created)
-
-    def test_expenses_with_extended_timeline_are_filtered(self):
-        another_expense_created = Expense.objects.create(
-            user=self.a_user,
-            value=240,
-            date='2022-05-12',
-            category=self.category_for_expense,
-            name="Another custom expense"
-        )
-
-        Expense.objects.create(
-            user=self.a_user,
-            value=240,
-            date='2022-01-10',
-            category=self.category_for_expense,
-            name="Old Expense"
-        )
-
-        a_date = date(2022, 5, 12)
-        filtered_expenses = Expense.filter_within_timeline_from_user(self.a_user, a_date, a_date)
-
-        self.assertEqual(len(filtered_expenses), 2)
-        self.assertEqual(filtered_expenses[0], self.expense_created)
-        self.assertEqual(filtered_expenses[1], another_expense_created)
-
-    def test_expenses_with_extended_timeline_are_not_filtered(self):
-        another_expense_created = Expense.objects.create(
-            user=self.a_user,
-            value=240,
-            date='2022-04-10',
-            category=self.category_for_expense,
-            name="Another custom expense"
-        )
-
-        old_expense = Expense.objects.create(
-            user=self.a_user,
-            value=240,
-            date='2021-01-10',
-            category=self.category_for_expense,
-            name="Old Expense"
-        )
-
-        filtered_expenses = Expense.filter_within_timeline_from_user(self.a_user, date(2021, 1, 1), date(2022, 6, 1))
 
         self.assertEqual(len(filtered_expenses), 3)
-        self.assertEqual(filtered_expenses[0], self.expense_created)
-        self.assertEqual(filtered_expenses[1], another_expense_created)
-        self.assertEqual(filtered_expenses[2], old_expense)
+        self.assertEqual(filtered_expenses[1], self.expense_created)
+        self.assertEqual(filtered_expenses[2], self.another_expense_created)
+
+    # def test_expenses_with_extended_timeline_are_filtered(self):
+    #     another_expense_created = Expense.objects.create(
+    #         user=self.a_user,
+    #         value=240,
+    #         date='2022-05-12',
+    #         category=self.category_for_expense,
+    #         name="Another custom expense"
+    #     )
+
+    #     Expense.objects.create(
+    #         user=self.a_user,
+    #         value=240,
+    #         date='2022-01-10',
+    #         category=self.category_for_expense,
+    #         name="Old Expense"
+    #     )
+
+    #     a_date = date(2022, 5, 12)
+    #     filtered_expenses = Expense.filter_within_timeline_from_user(self.a_user, a_date, a_date)
+
+    #     self.assertEqual(len(filtered_expenses), 2)
+    #     self.assertEqual(filtered_expenses[0], self.expense_created)
+    #     self.assertEqual(filtered_expenses[1], another_expense_created)
+
+    # def test_expenses_with_extended_timeline_are_not_filtered(self):
+    #     another_expense_created = Expense.objects.create(
+    #         user=self.a_user,
+    #         value=240,
+    #         date='2022-04-10',
+    #         category=self.category_for_expense,
+    #         name="Another custom expense"
+    #     )
+
+    #     old_expense = Expense.objects.create(
+    #         user=self.a_user,
+    #         value=240,
+    #         date='2021-01-10',
+    #         category=self.category_for_expense,
+    #         name="Old Expense"
+    #     )
+
+    #     filtered_expenses = Expense.filter_within_timeline_from_user(self.a_user, date(2021, 1, 1), date(2022, 6, 1))
+
+    #     self.assertEqual(len(filtered_expenses), 3)
+    #     self.assertEqual(filtered_expenses[0], self.expense_created)
+    #     self.assertEqual(filtered_expenses[1], another_expense_created)
+    #     self.assertEqual(filtered_expenses[2], old_expense)
 
     def test_expense_with_specific_category_from_one_date_is_obtained(self):
         a_date = date(2022, 5, 12)
         filtered_expenses = Expense.filter_by_category_within_timeline_from_user(self.a_user, a_date, a_date, self.category_for_expense)
 
-        self.assertEqual(len(filtered_expenses), 1)
-        self.assertEqual(filtered_expenses[0], self.expense_created)
-
-    def test_expenses_with_specific_category_from_one_date_are_obtained(self):
-        self.another_expense_created = Expense.objects.create(
-            user=self.a_user,
-            value=240,
-            date='2022-05-12',
-            category=self.category_for_expense,
-            name="Another custom expense"
-        )
-
-        a_date = date(2022, 5, 12)
-        filtered_expenses = Expense.filter_by_category_within_timeline_from_user(self.a_user, a_date, a_date, self.category_for_expense)
-
         self.assertEqual(len(filtered_expenses), 2)
-        self.assertEqual(filtered_expenses[0], self.expense_created)
-        self.assertEqual(filtered_expenses[1], self.another_expense_created)
+        self.assertEqual(filtered_expenses[1], self.expense_created)
 
-    def test_expenses_with_same_category_with_extended_timeline_are_filtered(self):
-        another_expense_created = Expense.objects.create(
-            user=self.a_user,
-            value=240,
-            date='2022-05-12',
-            category=self.category_for_expense,
-            name="Another custom expense"
-        )
+    # def test_expenses_with_specific_category_from_one_date_are_obtained(self):
+    #     self.another_expense_created = Expense.objects.create(
+    #         user=self.a_user,
+    #         value=240,
+    #         date='2022-05-12',
+    #         category=self.category_for_expense,
+    #         name="Another custom expense"
+    #     )
 
-        Expense.objects.create(
-            user=self.a_user,
-            value=240,
-            date='2022-01-10',
-            category=self.another_category,
-            name="Old Expense"
-        )
+    #     a_date = date(2022, 5, 12)
+    #     filtered_expenses = Expense.filter_by_category_within_timeline_from_user(self.a_user, a_date, a_date, self.category_for_expense)
 
-        filtered_expenses = Expense.filter_by_category_within_timeline_from_user(self.a_user, date(2021, 1, 2), date(2022, 6, 1), self.category_for_expense)
+    #     self.assertEqual(len(filtered_expenses), 2)
+    #     self.assertEqual(filtered_expenses[0], self.expense_created)
+    #     self.assertEqual(filtered_expenses[1], self.another_expense_created)
 
-        self.assertEqual(len(filtered_expenses), 2)
-        self.assertEqual(filtered_expenses[0], self.expense_created)
-        self.assertEqual(filtered_expenses[1], another_expense_created)
+    # def test_expenses_with_same_category_with_extended_timeline_are_filtered(self):
+    #     another_expense_created = Expense.objects.create(
+    #         user=self.a_user,
+    #         value=240,
+    #         date='2022-05-12',
+    #         category=self.category_for_expense,
+    #         name="Another custom expense"
+    #     )
 
-    def test_expenses_with_specific_category_with_extended_timeline_are_filtered(self):
-        another_expense_created = Expense.objects.create(
-            user=self.a_user,
-            value=240,
-            date='2022-04-10',
-            category=self.category_for_expense,
-            name="Another custom expense"
-        )
+    #     Expense.objects.create(
+    #         user=self.a_user,
+    #         value=240,
+    #         date='2022-01-10',
+    #         category=self.another_category,
+    #         name="Old Expense"
+    #     )
 
-        old_expense = Expense.objects.create(
-            user=self.a_user,
-            value=240,
-            date='2021-01-10',
-            category=self.category_for_expense,
-            name="Old Expense"
-        )
+    #     filtered_expenses = Expense.filter_by_category_within_timeline_from_user(self.a_user, date(2021, 1, 2), date(2022, 6, 1), self.category_for_expense)
 
-        filtered_expenses = Expense.filter_by_category_within_timeline_from_user(self.a_user, date(2021, 1, 1), date(2022, 6, 1), self.category_for_expense)
+    #     self.assertEqual(len(filtered_expenses), 2)
+    #     self.assertEqual(filtered_expenses[0], self.expense_created)
+    #     self.assertEqual(filtered_expenses[1], another_expense_created)
 
-        self.assertEqual(len(filtered_expenses), 3)
-        self.assertEqual(filtered_expenses[0], self.expense_created)
-        self.assertEqual(filtered_expenses[1], another_expense_created)
-        self.assertEqual(filtered_expenses[2], old_expense)
+    # def test_expenses_with_specific_category_with_extended_timeline_are_filtered(self):
+    #     Expense.objects.create(
+    #         user=self.a_user,
+    #         value=100000,
+    #         date='2019-04-10',
+    #         category=self.category_for_expense,
+    #         name="Another custom expense",
+    #         type="income"
+    #     )
+    #     another_expense_created = Expense.objects.create(
+    #         user=self.a_user,
+    #         value=240,
+    #         date='2022-04-10',
+    #         category=self.category_for_expense,
+    #         name="Another custom expense",
+    #     )
+
+    #     old_expense = Expense.objects.create(
+    #         user=self.a_user,
+    #         value=240,
+    #         date='2021-01-10',
+    #         category=self.category_for_expense,
+    #         name="Old Expense"
+    #     )
+
+    #     filtered_expenses = Expense.filter_by_category_within_timeline_from_user(self.a_user, date(2021, 1, 1), date(2022, 6, 1), self.category_for_expense)
+
+    #     self.assertEqual(len(filtered_expenses), 4)
+    #     self.assertEqual(filtered_expenses[0], self.expense_created)
+    #     self.assertEqual(filtered_expenses[1], another_expense_created)
+    #     self.assertEqual(filtered_expenses[2], old_expense)
 
 
 class TestExponsesView(APITestCase):
@@ -228,20 +239,31 @@ class TestExponsesView(APITestCase):
             'value': 250.5,
             'date': '2022-05-12',
             'category_id': 2,
-            'name': "Last Expense of the month"
+            'name': "Last Expense of the month",
+            "type":"expense"
         }, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_user_delete_created_expense(self):
+        self.client.post(self.endpoint, {
+            'value': 250.5,
+            'date': '2021-01-30',
+            'category_id': 3,
+            'name': "Another expense",
+            "type":"income"
+        }, format='json')
+
         response = self.client.post(self.endpoint, {
             'value': 250.5,
             'date': '2021-01-30',
             'category_id': 3,
-            'name': "Another expense"
+            'name': "Another expense",
+            "type":"expense"
         }, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+        response = self.client.delete(self.endpoint, {'id': '2'}, format='json')
         response = self.client.delete(self.endpoint, {'id': '1'}, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -250,41 +272,51 @@ class TestExponsesView(APITestCase):
 
         self.assertEqual(response.json(), [])
 
-    def test_user_cannot_delete_another_user_expense(self):
-        another_user = User.objects.create(
-            firebase_uid=create_random_string(FIREBASE_UID_LENGTH))
+    # def test_user_cannot_delete_another_user_expense(self):
+    #     another_user = User.objects.create(
+    #         firebase_uid=create_random_string(FIREBASE_UID_LENGTH))
+        
 
-        Expense.create_expense_for_user(another_user, name='Random expense',
-                                        date='2019-01-30', value=100, category=Category.objects.all()[1])
+    #     Expense.create_expense_for_user(another_user, name='Random expense',
+    #                                     date='2019-01-30', value=100, category=Category.objects.all()[1])
 
-        response = self.client.delete(
-            self.endpoint, {'id': '1'}, format='json')
+    #     response = self.client.delete(
+    #         self.endpoint, {'id': '1'}, format='json')
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+    #     self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_user_cannot_modify_another_user_expense(self):
-        another_user = User.objects.create(
-            firebase_uid=create_random_string(FIREBASE_UID_LENGTH))
+    # def test_user_cannot_modify_another_user_expense(self):
+    #     another_user = User.objects.create(
+    #         firebase_uid=create_random_string(FIREBASE_UID_LENGTH))
 
-        Expense.create_expense_for_user(another_user, name='Random expense',
-                                        date='2019-01-30', value=100, category=Category.objects.all()[1])
+    #     Expense.create_expense_for_user(another_user, name='Random expense',
+    #                                     date='2019-01-30', value=100, category=Category.objects.all()[1])
 
-        response = self.client.patch(self.endpoint, {
-            'id': 1,
-            'value': 100,
-            'date': '2021-01-30',
-            'category_id': 1,
-            'name': "Another expense"
-        }, format='json')
+    #     response = self.client.patch(self.endpoint, {
+    #         'id': 1,
+    #         'value': 100,
+    #         'date': '2021-01-30',
+    #         'category_id': 1,
+    #         'name': "Another expense"
+    #     }, format='json')
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+    #     self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_user_reads_expenses(self):
         response = self.client.post(self.endpoint, {
             'value': 59999,
+            'date': '2019-03-25',
+            'category_id': 2,
+            'name': "Expensive Expense",
+            'type': 'income'
+        }, format='json')
+
+        response = self.client.post(self.endpoint, {
+            'value': 59999,
             'date': '2021-03-25',
             'category_id': 2,
-            'name': "Expensive Expense"
+            'name': "Expensive Expense",
+            'type' : 'expense'
         }, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -299,10 +331,19 @@ class TestExponsesView(APITestCase):
 
     def test_user_update_all_information_related_to_category_expense(self):
         self.client.post(self.endpoint, {
+            'value': 1000000,
+            'date': '2019-01-30',
+            'category_id': 3,
+            'name': "Another expense",
+            'type': 'income'
+        }, format='json')
+
+        self.client.post(self.endpoint, {
             'value': 250.5,
             'date': '2021-01-30',
             'category_id': 3,
-            'name': "Another expense"
+            'name': "Another expense",
+            'type': 'expense'
         }, format='json')
 
         self.client.patch(self.endpoint, {
@@ -310,38 +351,50 @@ class TestExponsesView(APITestCase):
             'value': 87444,
             'date': '2020-02-05',
             'category_id': 1,
-            'name': "Modified Expense"
+            'name': "Modified Expense",
+            'type': 'expense'
         }, format='json')
 
         response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        json_response = response.json()[0]
+        json_response = response.json()[1]
 
         self.assertExpenseInformationIsRight(json_response, 87444.0, '2020-02-05', 1, 'Modified Expense')
 
     def test_user_update_only_category_of_created_expense(self):
+        
+        self.client.post(self.endpoint, {
+            'value': 1000000,
+            'date': '2021-01-30',
+            'category_id': 3,
+            'name': "Another expense",
+            'type': 'income'
+        }, format='json')
+
         self.client.post(self.endpoint, {
             'value': 250.5,
             'date': '2021-01-30',
             'category_id': 3,
-            'name': "Another expense"
+            'name': "Another expense",
+            'type': 'expense'
         }, format='json')
 
         self.client.patch(self.endpoint, {
-            'id': 1,
+            'id': 2,
             'value': 250.5,
             'date': '2021-01-30',
             'category_id': 1,
-            'name': "Another expense"
+            'name': "Another expense",
+            'type': "expense"
         }, format='json')
 
         response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        json_response = response.json()[0]
+        json_response = response.json()[1]
 
         self.assertExpenseInformationIsRight(json_response, 250.5, '2021-01-30', 1, 'Another expense')
 
@@ -364,17 +417,27 @@ class TestExponsesView(APITestCase):
 
     def test_user_reads_expense_from_a_specific_time_line(self):
         self.client.post(self.endpoint, {
+            'value': 1000000,
+            'date': '2019-06-20',
+            'category_id': 1,
+            'name': "Another expense",
+            'type': 'income'
+        }, format='json')
+
+        self.client.post(self.endpoint, {
             'value': 10599,
             'date': '2021-06-20',
             'category_id': 1,
-            'name': "Another expense"
+            'name': "Another expense",
+            'type': 'expense'
         }, format='json')
 
         self.client.post(self.endpoint, {
             'value': 123456,
             'date': '2022-06-02',
             'category_id': 3,
-            'name': "Another expense"
+            'name': "Another expense",
+            'type': 'expense'
         }, format='json')
 
         response = self.client.post(self.endpoint + "/filter", {
@@ -390,17 +453,27 @@ class TestExponsesView(APITestCase):
 
     def test_user_reads_expenses_within_extended_time_line(self):
         self.client.post(self.endpoint, {
+            'value': 1000000,
+            'date': '2019-05-19',
+            'category_id': 1,
+            'name': "Very old expense",
+            "type" : "income"
+        }, format='json')
+
+        self.client.post(self.endpoint, {
             'value': 10599,
             'date': '2021-05-20',
             'category_id': 1,
-            'name': "Very old expense"
+            'name': "Very old expense",
+            "type" : "expense"
         }, format='json')
 
         self.client.post(self.endpoint, {
             'value': 123456,
             'date': '2022-06-02',
             'category_id': 3,
-            'name': "Another expense"
+            'name': "Another expense",
+            "type" : "expense"
         }, format='json')
 
         response = self.client.post(self.endpoint + "/filter", {
@@ -415,24 +488,36 @@ class TestExponsesView(APITestCase):
 
     def test_user_reads_expenses_within_extended_time_line_of_a_specific_category(self):
         self.client.post(self.endpoint, {
+            'value': 10599000,
+            'date': '2019-05-20',
+            'category_id': 1,
+            'name': "Very old expense",
+            'type':"income"
+        }, format='json')
+
+        self.client.post(self.endpoint, {
             'value': 10599,
             'date': '2021-05-20',
             'category_id': 1,
-            'name': "Very old expense"
+            'name': "Very old expense",
+            'type':"expense"
         }, format='json')
 
         self.client.post(self.endpoint, {
             'value': 10500,
             'date': '2021-12-30',
             'category_id': 1,
-            'name': "Same category very old expense"
+            'name': "Same category very old expense",
+            'type':"expense",
+            'type':"expense"
         }, format='json')
 
         self.client.post(self.endpoint, {
             'value': 123456,
             'date': '2022-06-02',
             'category_id': 3,
-            'name': "Another expense"
+            'name': "Another expense",
+            'type':"expense"
         }, format='json')
 
         response = self.client.post(self.endpoint + "/filter", {
@@ -448,26 +533,39 @@ class TestExponsesView(APITestCase):
         self.assertExpenseInformationIsRight(json_response_one, 10500.0, '2021-12-30', 1, 'Same category very old expense')
         self.assertExpenseInformationIsRight(json_response_two, 10599.0, '2021-05-20', 1, 'Very old expense')
 
+
     def test_user_reads_expenses_within_extended_time_line_of_several_categories(self):
+                
+        self.client.post(self.endpoint, {
+            'value': 10000000,
+            'date': '2019-05-20',
+            'category_id': 1,
+            'name': 'Very old expense',
+            'type':'income'
+        }, format='json')
+
         self.client.post(self.endpoint, {
             'value': 10599,
             'date': '2021-05-20',
             'category_id': 1,
-            'name': "Very old expense"
+            'name': 'Very old expense',
+            'type':'expense'
         }, format='json')
 
         self.client.post(self.endpoint, {
             'value': 10500,
             'date': '2021-12-30',
             'category_id': 1,
-            'name': "Same category very old expense"
+            'name': 'Same category very old expense',
+            'type':'expense'
         }, format='json')
 
         self.client.post(self.endpoint, {
             'value': 123456,
             'date': '2022-06-02',
             'category_id': 3,
-            'name': "Another expense"
+            'name': 'Another expense',
+            'type':'expense'
         }, format='json')
 
         response = self.client.post(self.endpoint + "/filter", {
