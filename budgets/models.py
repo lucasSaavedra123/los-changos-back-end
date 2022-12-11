@@ -7,11 +7,25 @@ from categories.models import Category
 from expenses.models import Expense
 from datetime import date
 from datetime import datetime
+from sharedExpenses.models import SharedExpense
+import operator
+ 
 
 def validate_date_is_not_in_the_past(value):
     today = date.today()
     if value < today:
         raise ValidationError('Budget date cannot be in the past.')
+
+def inList(expense, lista):
+    for element in lista:
+        if element.id == expense.id:
+            return True
+        
+    return  False
+
+def getTotalFromList(list):
+    total = sum(map(operator.itemgetter('value'),list))
+    return total
 
 # Create your models here.
 class Budget(models.Model):
@@ -146,16 +160,42 @@ class Detail(models.Model):
 
     @property
     def total_spent(self):
+        expensesTotal= []
         expenses = Expense.objects.filter(
             user=self.assigned_budget.user,
             date__gte=self.assigned_budget.initial_date,
             date__lte=self.assigned_budget.final_date,
             category=self.category
         )
+        sharedExpenses= SharedExpense.objects.filter(
+            user=self.assigned_budget.user,
+            date__gte=self.assigned_budget.initial_date,
+            date__lte=self.assigned_budget.final_date,
+            category=self.category,
+            aceptedTransaction=True
+
+        )
+        userSharedExpenses= SharedExpense.objects.filter(
+            userToShare=self.assigned_budget.user,
+            date__gte=self.assigned_budget.initial_date,
+            date__lte=self.assigned_budget.final_date,
+            category=self.category,
+            aceptedTransaction=True
+        )
 
         total = 0
 
+        for expense in userSharedExpenses:
+            expensesTotal.append(expense.as_dict)
+
+        for expense in sharedExpenses:
+            expensesTotal.append(expense.as_dict)
+            
         for expense in expenses:
-            total += expense.value
+            if not inList(expense, sharedExpenses):
+                expensesTotal.append(expense.as_dict)
+        
+        total= getTotalFromList(expensesTotal)
+
 
         return total

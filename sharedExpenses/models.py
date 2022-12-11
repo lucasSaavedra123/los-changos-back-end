@@ -22,7 +22,7 @@ def validate_date_is_not_in_the_future(value):
 class SharedExpense(Expense):
     userToShare= models.ForeignKey(User, on_delete=models.CASCADE, related_name='userToShare')
     userToShareFlag= models.BooleanField(default=True)
-    aceptedTransaction = models.IntegerField(default=0)
+    aceptedTransaction = models.BooleanField(default=False)
 
     @classmethod
     def create_expense_for_user(cls, user, **kwargs):
@@ -39,6 +39,14 @@ class SharedExpense(Expense):
     @classmethod
     def expenses_user_made_with_me(cls, user):
         return cls.objects.order_by('-date').filter(userToShare=user)
+
+    @classmethod
+    def get_expenses_pending_to_accept(cls, user):  
+        return cls.objects.order_by('-date').filter(userToShare=user, aceptedTransaction=False)
+    
+    @classmethod
+    def get_expenses_created_by_user_pending_to_accept(cls, user):
+        return cls.objects.filter(user=user, aceptedTransaction=False)
 
     @classmethod
     def filter_within_timeline_from_user(cls, user, first_date, last_date):
@@ -62,6 +70,7 @@ class SharedExpense(Expense):
     def as_dict(self):
         return {
             'id': self.id,
+            'user': self.user.as_dict,
             'date': str(self.date),
             'category': self.category.as_dict,
             'value': float(self.value),

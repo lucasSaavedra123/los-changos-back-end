@@ -8,6 +8,8 @@ from firebase_admin._auth_utils import InvalidIdTokenError
 from users.models import User
 
 
+
+
 class CustomFirebaseAuthentication:
     def __init__(self, get_response):
         self.get_response = get_response
@@ -60,7 +62,7 @@ class CustomUserCreation:
     def process_view(self, request, view_func, view_args, view_kwargs):
 
         if not User.objects.filter(firebase_uid=request.META['uid']):
-            User.objects.create(firebase_uid=request.META['uid'],alias=self.createRandomNotRepeatedAlias())
+            User.objects.create(firebase_uid=request.META['uid'],alias=self.createRandomNotRepeatedAlias(),name="Julian",lastname="Alvarez")
 
         request.META['user'] = User.objects.get(firebase_uid=request.META['uid'])
 
@@ -82,3 +84,5 @@ class SanitizeRequest:
             request.META['body'] = json.loads(request.body.decode('utf-8'))
 
         return None
+
+

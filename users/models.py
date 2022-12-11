@@ -13,12 +13,20 @@ class User(models.Model):
         validators=[MinLengthValidator(FIREBASE_UID_LENGTH)]
     ) # UID is 28 characters long
     alias = models.CharField(max_length=10, unique=True)
-
+    name = models.CharField(max_length=50, blank=True)
+    lastname = models.CharField(max_length=50, blank=True)
 
     @property
     def as_dict(self):
         return {
             'id': self.id,
             'firebase_uid': self.firebase_uid,
-            'alias': self.alias
+            'alias': self.alias,
+            'name': self.name,
+            'lastname': self.lastname
         }
+    @classmethod
+    def get_user_by_firebase_uid(cls, firebase_uid):
+        return cls.objects.get(firebase_uid=firebase_uid)
+    
+   

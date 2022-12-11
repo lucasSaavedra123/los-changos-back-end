@@ -9,6 +9,7 @@ from rest_framework import status
 from budgets.models import Budget, Detail
 from categories.models import Category
 
+
 # Create your views here.
 @api_view(['GET', 'POST', 'PATCH', 'DELETE'])
 def budget(request):
@@ -16,8 +17,8 @@ def budget(request):
 
     try:
         if request.method == 'GET':
-            user_budgets = Budget.all_from_user(request.META['user'])
 
+            user_budgets = Budget.all_from_user(request.META['user'])
             budgets_as_dict = []
 
             for budget in user_budgets:

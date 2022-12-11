@@ -70,12 +70,14 @@ class TestSharedExpensesModel(TestCase):
     def test_expense_dictionary_serialization(self):
         self.assertDictEqual(self.shared_expense_created.as_dict, {
             'id': self.shared_expense_created.id,
+            'user': self.shared_expense_created.user.as_dict,
             'value': 2500,
             'category': self.category_for_expense.as_dict,
             'name': "Custom Expense",
             'date': '2022-06-12',
             'userToShare': self.anotherUser.as_dict,
-            'userToShareFlag': self.shared_expense_created.userToShareFlag
+            'userToShareFlag': self.shared_expense_created.userToShareFlag,
+            'aceptedTransaction': self.shared_expense_created.aceptedTransaction,
 
         })
     def test_expense_from_one_date_is_obtained(self):

@@ -41,6 +41,8 @@ def sharedExpense(request):
         elif request.method == 'POST':
             category = Category.objects.get(id=request_body['category_id'])
 
+            
+
             if not validateAlias(request_body['userToShare']):
 
                 return Response({"message": "Alias not found"}, status=status.HTTP_400_BAD_REQUEST)
@@ -52,7 +54,8 @@ def sharedExpense(request):
                 category=category,
                 date=request_body['date'],
                 name=request_body['name'],
-                userToShare= User.objects.get(alias=request_body['userToShare'])
+                userToShare= User.objects.get(alias=request_body['userToShare']),
+                
             )
 
             return Response(None, status=status.HTTP_201_CREATED)
@@ -78,6 +81,7 @@ def sharedExpense(request):
             expense.category = Category.objects.get(
                 id=request_body['category_id'])
             expense.userToShare = User.objects.get(alias=request_body['userToShare'])
+            expense.aceptedTransaction = request_body['aceptedTransaction']
             expense.save()
 
             return Response(None, status=status.HTTP_200_OK)
@@ -104,3 +108,32 @@ def editSharedExpense(request):
             return Response(None, status=status.HTTP_200_OK)
     except KeyError as key_error_exception:
         return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+def getPendingSharedExpensesCreatedToMe(request):
+    try:
+        if request.method == 'GET':
+            user_expenses = SharedExpense.get_expenses_pending_to_accept(request.META['user'])
+            expenses_as_dict = []
+
+            for expense in user_expenses:
+                expenses_as_dict.append(expense.as_dict)
+
+            return JsonResponse(expenses_as_dict, safe=False)
+
+    except KeyError as key_error_exception:
+        return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+# @api_view(['GET'])
+# def getPendingSharedExpensesCreatedByMe(request):
+#     try:
+#         if request.method == 'GET':
+#             user_expenses = SharedExpense.get_expenses_created_by_user_pending_to_accept(request.META['user'])
+#             expenses_as_dict = []
+
+#             for expense in user_expenses:
+#                 expenses_as_dict.append(expense.as_dict)
+
+#             return JsonResponse(expenses_as_dict, safe=False)
+#     except KeyError as key_error_exception:
+#         return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)
