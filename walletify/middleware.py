@@ -57,7 +57,7 @@ class CustomUserCreation:
     def process_view(self, request, view_func, view_args, view_kwargs):
 
         if not User.objects.filter(firebase_uid=request.META['uid']):
-            User.objects.create(firebase_uid=request.META['uid'],alias=self.createRandomNotRepeatedAlias())
+            User.objects.create(firebase_uid=request.META['uid'],alias=self.createRandomNotRepeatedAlias(), nombre="Gonzalo", apellido="Paredes")
 
         request.META['user'] = User.objects.get(firebase_uid=request.META['uid'])
 

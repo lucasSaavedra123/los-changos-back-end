@@ -57,7 +57,7 @@ def expense(request):
                     value=request_body['value'],
                     category=income_category,
                     date=request_body['date'],
-                    name="Transferencia recibida",
+                    name="Transferencia recibida de "  + request.META['user'].nombre + " " + request.META['user'].apellido,
                     type="transfer_receive"
                     )
 
@@ -66,7 +66,7 @@ def expense(request):
                     value=request_body['value'],
                     category=category,
                     date=request_body['date'],
-                    name="Transferencia enviada",
+                    name="Transferencia enviada a " + userToReceive.nombre + " " + userToReceive.apellido,
                     type=request_body['type']
                     )
 
