@@ -225,13 +225,10 @@ def expense_filter(request):
                     aux.append(expense.as_dict)
                 
 
-                print("Antes de orderna")
-                print(JsonResponse(response, safe=False))
-                
+               
                 response = orderExpensesByDate(aux)
                     
-                print("Depois de orderna")
-                print(JsonResponse(response, safe=False))
+                
          
                 
               

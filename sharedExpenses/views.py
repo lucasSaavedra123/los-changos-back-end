@@ -94,10 +94,10 @@ def editSharedExpense(request):
 
     try:
         if request.method == 'PATCH':
-            print(request_body)
+            
             expense = SharedExpense.objects.get(id=request_body['id'])
-            print(expense)
-            print(request.META['user'])
+            
+            
 
             if expense.userToShare != request.META['user']:
                 return Response(None, status=status.HTTP_403_FORBIDDEN)

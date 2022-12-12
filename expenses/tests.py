@@ -474,7 +474,7 @@ class TestExponsesView(APITestCase):
             "category_id": [1, 3]
         }, format='json')
 
-        print(response.json())
+        
 
         self.assertEqual(len(response.json()), 3)
 
