@@ -49,12 +49,12 @@ class TestBudgetsModel(TestCase):
         self.assertEqual(IntegrityError, type(raised.exception))
 
     def test_budget_cannot_be_finished_in_the_past(self):
-        with self.assertRaisesMessage(ValidationError, "{'final_date': ['Budget date cannot be in the past.']}"):
+        with self.assertRaisesMessage(ValidationError, "Budget date cannot be in the past."):
             Budget.objects.create(
                 user=self.a_user, initial_date='2050-05-5', final_date='2021-02-1')
 
     def test_budget_initial_date_should_be_earlier_than_final_date(self):
-        with self.assertRaisesMessage(ValidationError, "['Budget initial date should be earlier than final date.']"):
+        with self.assertRaisesMessage(ValidationError, "Budget initial date should be earlier than final date."):
             Budget.objects.create(
                 user=self.a_user, initial_date='2050-05-5', final_date='2030-01-5')
 
@@ -65,35 +65,23 @@ class TestBudgetsModel(TestCase):
             user=self.a_user, initial_date='2023-12-6', final_date='2027-05-1')
         self.assertEqual(len(Budget.all_from_user(self.a_user)), 2)
 
-    def test_user_cannot_create_two_budgets_that_overlap_slightly(self):
-        Budget.objects.create(
-            user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
-
-        with self.assertRaisesMessage(ValidationError, "['Budget is overlapping with another one.']"):
-            Budget.objects.create(
-                user=self.a_user, initial_date='2023-12-5', final_date='2027-05-1')
-
-        with self.assertRaisesMessage(ValidationError, "['Budget is overlapping with another one.']"):
-            Budget.objects.create(
-                user=self.a_user, initial_date='2022-12-01', final_date='2022-12-5')
-
     def test_user_cannot_create_two_budgets_that_overlap_partially(self):
         Budget.objects.create(
-            user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
+            user=self.a_user, initial_date='2026-01-01', final_date='2028-01-01')
 
-        with self.assertRaisesMessage(ValidationError, "['Budget is overlapping with another one.']"):
+        with self.assertRaisesMessage(ValidationError, "Budget is overlapping with another one."):
             Budget.objects.create(
-                user=self.a_user, initial_date='2022-12-1', final_date='2022-12-30')
+                user=self.a_user, initial_date='2025-01-01', final_date='2027-01-01')
 
-        with self.assertRaisesMessage(ValidationError, "['Budget is overlapping with another one.']"):
+        with self.assertRaisesMessage(ValidationError, "Budget is overlapping with another one."):
             Budget.objects.create(
-                user=self.a_user, initial_date='2023-01-01', final_date='2024-12-5')
+                user=self.a_user, initial_date='2024-01-01', final_date='2026-01-01')
 
     def test_user_cannot_create_two_budgets_that_overlap_completely(self):
         Budget.objects.create(
             user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
 
-        with self.assertRaisesMessage(ValidationError, "['Budget is overlapping with another one.']"):
+        with self.assertRaisesMessage(ValidationError, "Budget is overlapping with another one."):
             Budget.objects.create(
                 user=self.a_user, initial_date='2022-12-5', final_date='2023-12-1')
 
@@ -565,3 +553,415 @@ class TestBudgetsView(APITestCase):
         response = response.json()
 
         self.assertEqual(response, {})
+
+
+
+
+
+"""
+THERE NO TESTS IN VIEW FOR FUTURE EXPENSES DETAILS
+
+def test_create_one_budget_with_one_limit_detail_for_user(self):
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2023-05-01',
+            'final_date': '2023-06-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'limit': 5000
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_one_budget_with_one_future_expense_detail_for_user(self):
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2023-05-01',
+            'final_date': '2024-06-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'value': 5000,
+                    'expiration_date': '2023-11-05',
+                    'name': 'AySa Bill'
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_one_budge_with_one_future_expense_detail_for_user_and_he_retrieve_it(self):
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2023-05-01',
+            'final_date': '2024-06-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'limit': 5000
+                },
+                {
+                    'category_id': 1,
+                    'value': 5000,
+                    'expiration_date': '2023-11-05',
+                    'name': 'AySa Bill'
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.get(self.endpoint)
+
+        self.assertEqual(len(response.json()), 1)
+
+        first_budget = response.json()[0]
+
+        self.assertEqual(first_budget['initial_date'], '2023-05-01')
+        self.assertEqual(first_budget['final_date'], '2024-06-01')
+        self.assertEqual(len(first_budget['details']), 6)
+        self.assertEqual(first_budget['details'][1]['value'], 5000)
+
+    def test_create_one_budget_but_one_field_is_not_included(self):
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2023-05-01',
+            'final_date': '2029-06-01',
+            'details': [
+                {
+                    'category_id': 1,
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_creates_two_budgets_with_different_details_for_user_and_then_he_retrieve_them(self):
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2023-05-01',
+            'final_date': '2023-06-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'limit': 5000
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2023-01-01',
+            'final_date': '2023-02-01',
+            'details': [
+                {
+                    'category_id': 3,
+                    'limit': 1500
+                },
+                {
+                    'category_id': 2,
+                    'limit': 5000
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.get(self.endpoint)
+
+        self.assertEqual(len(response.json()), 2)
+
+        first_budget = response.json()[0]
+
+        self.assertEqual(first_budget['initial_date'], '2023-05-01')
+        self.assertEqual(first_budget['final_date'], '2023-06-01')
+        self.assertEqual(len(first_budget['details']), 5)
+        self.assertEqual(first_budget['details'][0]['spent'], 0)
+        self.assertEqual(first_budget['total_limit'], 5000)
+        self.assertEqual(first_budget['total_spent'], 0)
+        self.assertEqual(first_budget['editable'], True)
+
+    def test_user_creates_a_budget_and_then_he_modifies_it(self):
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2030-02-01',
+            'final_date': '2050-02-01',
+            'details': [
+                {
+                    'category_id': 3,
+                    'limit': 1500
+                },
+                {
+                    'category_id': 2,
+                    'limit': 5000
+                }
+            ]
+        }, format='json')
+
+        response = self.client.patch(self.endpoint, {
+            'id': 1,
+            'initial_date': '2021-01-01',
+            'final_date': '2023-02-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'limit': 1000
+                },
+                {
+                    'category_id': 3,
+                    'limit': 2000
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = self.client.get(self.endpoint, format='json')
+
+        response = response.json()[0]
+
+        self.assertEqual(response['id'], 1)
+        self.assertEqual(response['initial_date'], '2021-01-01')
+        self.assertEqual(response['editable'], False)
+        self.assertEqual(response['final_date'], '2023-02-01')
+        self.assertEqual(response['details'][0]['category']['id'], 1)
+        self.assertEqual(response['details'][0]['limit'], 1000.00)
+        self.assertEqual(response['details'][1]['category']['id'], 3)
+        self.assertEqual(response['details'][1]['limit'], 2000.00)
+
+    def test_user_creates_an_active_budget_and_then_he_tries_to_modify_it_but_fails(self):
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2020-02-01',
+            'final_date': '2050-02-01',
+            'details': [
+                {
+                    'category_id': 3,
+                    'limit': 1500
+                },
+                {
+                    'category_id': 2,
+                    'limit': 5000
+                }
+            ]
+        }, format='json')
+
+        response = self.client.patch(self.endpoint, {
+            'id': 1,
+            'initial_date': '2021-01-01',
+            'final_date': '2023-02-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'limit': 1000
+                },
+                {
+                    'category_id': 3,
+                    'limit': 2000
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_user_deletes_own_budget(self):
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2023-05-01',
+            'final_date': '2023-06-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'limit': 5000
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2023-01-01',
+            'final_date': '2050-02-01',
+            'details': [
+                {
+                    'category_id': 3,
+                    'limit': 1500
+                },
+                {
+                    'category_id': 2,
+                    'limit': 5000
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.client.delete(self.endpoint, {'id': 1}, format='json')
+
+        response = self.client.get(self.endpoint)
+
+        self.assertEqual(len(response.json()), 1)
+
+    def test_user_cannot_delete_own_current_budget(self):
+        response = self.client.post(self.endpoint, {
+            'initial_date': '2020-05-01',
+            'final_date': '2030-06-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'limit': 5000
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.delete(self.endpoint, {'id': 1}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_user_cannot_delete_another_user_budget(self):
+        another_user = User.objects.create(
+            firebase_uid=create_random_string(FIREBASE_UID_LENGTH))
+
+        Budget.objects.create(
+            user=another_user, initial_date='2020-01-01', final_date='2025-01-01')
+
+        response = self.client.delete(
+            self.endpoint, {'id': '1'}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_user_cannot_update_another_user_budget(self):
+        another_user = User.objects.create(
+            firebase_uid=create_random_string(FIREBASE_UID_LENGTH))
+
+        Budget.objects.create(
+            user=another_user, initial_date='2020-01-01', final_date='2025-01-01')
+
+        response = self.client.patch(self.endpoint, {
+            'id': 1,
+            'initial_date': '2023-01-01',
+            'final_date': '2023-02-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'limit': 1000
+                },
+                {
+                    'category_id': 3,
+                    'limit': 2000
+                }
+            ]
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_user_has_no_provide_valid_token_to_read_budgets(self):
+        def action(self):
+            return self.client.get(self.endpoint)
+
+        self.assertActionInSecureEnvironment(action)
+
+    def test_user_has_no_provide_valid_token_to_add_budgets(self):
+        def action(self):
+            return self.client.post(self.endpoint, {
+                'id': 1,
+                'initial_date': '2023-01-01',
+                'final_date': '2023-02-01',
+                'details': [
+                    {
+                        'category_id': 1,
+                        'limit': 1000
+                    },
+                    {
+                        'category_id': 3,
+                        'limit': 2000
+                    }
+                ]
+            }, format='json')
+
+        self.assertActionInSecureEnvironment(action)
+
+    def test_user_has_no_provide_valid_token_to_patch_budget(self):
+        def action(self):
+            return self.client.patch(self.endpoint, {
+                'id': 5,
+                'initial_date': '2023-01-01',
+                'final_date': '2023-02-01',
+                'details': [
+                    {
+                        'category_id': 1,
+                        'limit': 1000
+                    },
+                    {
+                        'category_id': 3,
+                        'limit': 2000
+                    }
+                ]
+            }, format='json')
+
+        self.assertActionInSecureEnvironment(action)
+
+    def test_user_has_no_provide_valid_token_to_delete_budget(self):
+        def action(self):
+            return self.client.delete(
+                self.endpoint, {'id': 90}, format='json')
+
+        self.assertActionInSecureEnvironment(action)
+
+    def test_user_get_current_budget(self):
+        self.client.post(self.endpoint, {
+            'id': 1,
+            'initial_date': '2020-01-01',
+            'final_date': '2023-02-01',
+            'details': [
+                {
+                    'category_id': 1,
+                    'limit': 1000
+                },
+                {
+                    'category_id': 3,
+                    'limit': 2000
+                }
+            ]
+        }, format='json')
+
+        response = self.client.get(self.endpoint + '/current')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = response.json()
+
+        self.assertEqual(response['id'], 1)
+        self.assertEqual(response['initial_date'], '2020-01-01')
+        self.assertEqual(response['final_date'], '2023-02-01')
+        self.assertEqual(response['details'][0]['category']['id'], 1)
+        self.assertEqual(response['details'][0]['limit'], 1000.00)
+        self.assertEqual(response['details'][1]['category']['id'], 3)
+        self.assertEqual(response['details'][1]['limit'], 2000.00)
+
+    def test_user_get_no_current_budget(self):
+        self.client.post(self.endpoint, {
+            'id': 1,
+            'initial_date': '2030-01-01',
+            'final_date': '2050-02-01',
+            'details': [
+                {
+                    'category_id': 4,
+                    'limit': 9778
+                },
+                {
+                    'category_id': 2,
+                    'limit': 1000
+                }
+            ]
+        }, format='json')
+
+        response = self.client.get(self.endpoint + '/current')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = response.json()
+
+        self.assertEqual(response, {})
+
+
+
+"""

@@ -224,4 +224,3 @@ class TestCategoriesView(APITestCase):
             return self.client.delete(self.endpoint, {'id': 85}, format='json')
 
         self.assertActionInSecureEnvironment(action)
-
