@@ -25,15 +25,17 @@ def budget(request):
 
             all_categories_from_user = Category.categories_from_user(request.META['user'])
 
+            #Front-End requires all limits with each category
+            #There should be an improvement for this. At the end, improvements will be done
             for budget_index in range(len(budgets_as_dict)):
-                categories_that_are_in_budget = []
+                categories_that_have_limit_budgets = []
 
                 for detail in budgets_as_dict[budget_index]['details']:
-                    categories_that_are_in_budget.append(detail['category']['id'])
-                
+                    if detail.get('limit', None) is not None:
+                        categories_that_have_limit_budgets.append(detail['category']['id'])
 
                 for user_category in all_categories_from_user:
-                    if user_category.id not in categories_that_are_in_budget:
+                    if user_category.id not in categories_that_have_limit_budgets:
                         budgets_as_dict[budget_index]['details'].append({
                             'category': user_category.as_dict,
                             'limit':0,
@@ -85,17 +87,19 @@ def budget(request):
                 budget.initial_date = request_body['initial_date']
                 budget.final_date = request_body['final_date']
 
-                #First check if all details are okay.
-                for detail in request_body['details']:
-                    detail['limit']
-                    detail['category_id']
-
+                #Esto hay que revisarlo. Osea, si falla algo abajo, se borraron todos los detalles sin querer!!!
                 for detail in Detail.from_budget(budget):
                     detail.delete()
 
                 for detail in request_body['details']:
-                    if detail['limit'] > 0:
-                        budget.add_limit(Category.objects.get(id=detail['category_id']), detail['limit'])
+                    if 'limit' in detail:
+                        if detail['limit'] > 0:
+                            budget.add_limit(Category.objects.get(id=detail['category_id']), detail['limit'])
+                    elif 'value' in detail:
+                        if detail['value'] > 0:
+                            budget.add_future_expense(Category.objects.get(id=detail['category_id']), detail['value'], detail['name'], detail['expiration_date'])
+                    else:
+                        return Response({"message": f"Request should include in details field limit and value for limit or future expense detail respectively"}, status=status.HTTP_400_BAD_REQUEST)
 
                 budget.save(update=True)
 

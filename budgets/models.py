@@ -172,24 +172,6 @@ class LimitDetail(Detail):
         return total
 
 class FutureExpenseDetail(Detail):
-    category = models.ForeignKey(
-        Category,
-        on_delete=models.CASCADE,
-        default=None,
-        null=True,
-        blank=True,
-        editable=True
-    )
-
-    assigned_budget = models.ForeignKey(
-        Budget,
-        on_delete=models.CASCADE,
-        default=None,
-        null=True,
-        blank=True,
-        editable=True
-    )
-
     name = models.CharField(max_length=50, null=True)
 
     expiration_date = models.DateField(validators=[], null=True)
