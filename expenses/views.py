@@ -11,7 +11,7 @@ from rest_framework import status
 from categories.models import Category
 
 from .models import Expense
-from ..budgets.models import FutureExpenseDetail
+from budgets.models import FutureExpenseDetail
 
 # Create your views here.
 
