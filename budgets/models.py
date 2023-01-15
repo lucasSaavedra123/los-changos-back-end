@@ -173,14 +173,16 @@ class LimitDetail(Detail):
 
 class FutureExpenseDetail(Detail):
     name = models.CharField(max_length=50, null=True)
-
     expiration_date = models.DateField(validators=[], null=True)
+    expended = models.BooleanField(default=False)
 
     @property
     def as_dict(self):
         return {
+            'id': self.id,
             'category': self.category.as_dict,
             'value': float(self.value),
             'name': self.name,
+            'expended': self.expended,
             'expiration_date': self.expiration_date
         }

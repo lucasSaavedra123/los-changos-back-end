@@ -11,6 +11,7 @@ from rest_framework import status
 from categories.models import Category
 
 from .models import Expense
+from ..budgets.models import FutureExpenseDetail
 
 # Create your views here.
 
@@ -26,6 +27,13 @@ def expense(request):
 
             for expense in user_expenses:
                 expenses_as_dict.append(expense.as_dict)
+
+            #Also, Future Expenses are Needed (will be shown as a regular expense)
+
+            expensed_future_expenses = FutureExpenseDetail.objects.filter(expended=True)
+
+            for future_expense in expensed_future_expenses:
+                expenses_as_dict.append(future_expense.as_dict)
 
             return JsonResponse(expenses_as_dict, safe=False)
 

@@ -107,7 +107,6 @@ def budget(request):
     except KeyError as key_error_exception:
         return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-# Create your views here.
 @api_view(['GET'])
 def current_budget(request):
     if request.method == 'GET':
@@ -117,3 +116,19 @@ def current_budget(request):
             return JsonResponse({}, safe=False)
         else:
             return JsonResponse(current_user_budget.as_dict, safe=False)
+
+@api_view(['PATCH'])
+def make_future_expense(request):
+    if request.method == 'PATCH':
+        current_user_budget = Budget.current_budget_of(request.META['user'])
+
+        if current_user_budget is None:
+            return JsonResponse({"message": f"User has no current budget"}, safe=False)
+        else:
+            for detail in Detail.from_budget(current_user_budget):
+                if detail.id == request.META['body']['future_expense_id']:
+                    detail.expended = True
+                    detail.save()
+                    return JsonResponse({"message": f"Future Expense updated"}, safe=False)
+            
+            return JsonResponse({"message": f"Future Expense with ID {request.META['body']['future_expense_id']} does not exist"}, safe=False)
