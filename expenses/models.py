@@ -7,6 +7,8 @@ from users.models import User
 from datetime import datetime
 import requests
 
+
+
 def validate_date_is_not_in_the_future(value):
     today = date.today()
     if value > today:
@@ -26,6 +28,7 @@ class Expense(models.Model):
         validators=[MinValueValidator(0.01)])  # Up to $100,000,000
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
+    has_associated_future_expense = models.BooleanField(default=False)
 
     @classmethod
     def create_expense_for_user(cls, user, **kwargs):

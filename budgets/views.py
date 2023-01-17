@@ -6,10 +6,13 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
+from expenses.models import Expense
 from budgets.models import Budget, Detail
 from categories.models import Category
 
 # Create your views here.
+
+
 @api_view(['GET', 'POST', 'PATCH', 'DELETE'])
 def budget(request):
     request_body = request.META['body']
@@ -23,22 +26,24 @@ def budget(request):
             for budget in user_budgets:
                 budgets_as_dict.append(budget.as_dict)
 
-            all_categories_from_user = Category.categories_from_user(request.META['user'])
+            all_categories_from_user = Category.categories_from_user(
+                request.META['user'])
 
-            #Front-End requires all limits with each category
-            #There should be an improvement for this. At the end, improvements will be done
+            # Front-End requires all limits with each category
+            # There should be an improvement for this. At the end, improvements will be done
             for budget_index in range(len(budgets_as_dict)):
                 categories_that_have_limit_budgets = []
 
                 for detail in budgets_as_dict[budget_index]['details']:
                     if detail.get('limit', None) is not None:
-                        categories_that_have_limit_budgets.append(detail['category']['id'])
+                        categories_that_have_limit_budgets.append(
+                            detail['category']['id'])
 
                 for user_category in all_categories_from_user:
                     if user_category.id not in categories_that_have_limit_budgets:
                         budgets_as_dict[budget_index]['details'].append({
                             'category': user_category.as_dict,
-                            'limit':0,
+                            'limit': 0,
                             'spent': 0
                         })
 
@@ -55,10 +60,12 @@ def budget(request):
             for detail in request_body['details']:
                 if 'limit' in detail:
                     if detail['limit'] > 0:
-                        new_budget.add_limit(Category.objects.get(id=detail['category_id']), detail['limit'])
+                        new_budget.add_limit(Category.objects.get(
+                            id=detail['category_id']), detail['limit'])
                 elif 'value' in detail:
                     if detail['value'] > 0:
-                        new_budget.add_future_expense(Category.objects.get(id=detail['category_id']), detail['value'], detail['name'], detail['expiration_date'])
+                        new_budget.add_future_expense(Category.objects.get(
+                            id=detail['category_id']), detail['value'], detail['name'], detail['expiration_date'])
                 else:
                     return Response({"message": f"Request should include in details field limit and value for limit or future expense detail respectively"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -89,17 +96,19 @@ def budget(request):
                 budget.initial_date = request_body['initial_date']
                 budget.final_date = request_body['final_date']
 
-                #Esto hay que revisarlo. Osea, si falla algo abajo, se borraron todos los detalles sin querer!!!
+                # Esto hay que revisarlo. Osea, si falla algo abajo, se borraron todos los detalles sin querer!!!
                 for detail in Detail.from_budget(budget):
                     detail.delete()
 
                 for detail in request_body['details']:
                     if 'limit' in detail:
                         if detail['limit'] > 0:
-                            budget.add_limit(Category.objects.get(id=detail['category_id']), detail['limit'])
+                            budget.add_limit(Category.objects.get(
+                                id=detail['category_id']), detail['limit'])
                     elif 'value' in detail:
                         if detail['value'] > 0:
-                            budget.add_future_expense(Category.objects.get(id=detail['category_id']), detail['value'], detail['name'], detail['expiration_date'])
+                            budget.add_future_expense(Category.objects.get(
+                                id=detail['category_id']), detail['value'], detail['name'], detail['expiration_date'])
                     else:
                         return Response({"message": f"Request should include in details field limit and value for limit or future expense detail respectively"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -108,6 +117,7 @@ def budget(request):
             return Response(None, status=status.HTTP_200_OK)
     except KeyError as key_error_exception:
         return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET'])
 def current_budget(request):
@@ -118,6 +128,7 @@ def current_budget(request):
             return JsonResponse({}, safe=False)
         else:
             return JsonResponse(current_user_budget.as_dict, safe=False)
+
 
 @api_view(['PATCH'])
 def make_future_expense(request):
@@ -131,6 +142,16 @@ def make_future_expense(request):
                 if detail.id == request.META['body']['future_expense_id']:
                     detail.expended = True
                     detail.save()
-                    return JsonResponse({"message": f"Future Expense updated"}, safe=False)
-            
+
+                    Expense.create_expense_for_user(
+                        request.META['user'],
+                        value=detail.value,
+                        category=detail.category,
+                        date=request.META['expense_done_date'],
+                        name=detail.name,
+                        has_associated_future_expense=True
+                    )
+
+                    return JsonResponse({"message": f"Future Expense created"}, safe=False)
+
             return JsonResponse({"message": f"Future Expense with ID {request.META['body']['future_expense_id']} does not exist"}, safe=False)
