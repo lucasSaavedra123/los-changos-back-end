@@ -27,7 +27,8 @@ class Budget(models.Model):
     )
 
     initial_date = models.DateField(validators=[])
-    final_date = models.DateField(validators=[validate_date_is_not_in_the_past])
+    #final_date = models.DateField(validators=[validate_date_is_not_in_the_past])
+    final_date = models.DateField()
 
     @classmethod
     def all_from_user(cls, user):

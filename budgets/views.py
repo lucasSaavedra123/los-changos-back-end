@@ -147,7 +147,7 @@ def make_future_expense(request):
                         request.META['user'],
                         value=detail.value,
                         category=detail.category,
-                        date=request.META['expense_done_date'],
+                        date=request.META['body']['expense_done_date'],
                         name=detail.name,
                         future_expense=True
                     )
