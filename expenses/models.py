@@ -28,7 +28,7 @@ class Expense(models.Model):
         validators=[MinValueValidator(0.01)])  # Up to $100,000,000
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
-    has_associated_future_expense = models.BooleanField(default=False)
+    future_expense = models.BooleanField(default=False)
 
     @classmethod
     def create_expense_for_user(cls, user, **kwargs):
@@ -53,7 +53,8 @@ class Expense(models.Model):
             'date': str(self.date),
             'category': self.category.as_dict,
             'value': float(self.value),
-            'name': self.name
+            'name': self.name,
+            'future_expense': self.future_expense
         }
 
     def save(self, *args, **kwargs):

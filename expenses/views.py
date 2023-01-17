@@ -45,7 +45,7 @@ def expense(request):
                 value=request_body['value'],
                 category=category,
                 date=request_body['date'],
-                name=request_body['name']
+                name=request_body['name'],
             )
 
             return Response(None, status=status.HTTP_201_CREATED)

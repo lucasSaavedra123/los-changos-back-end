@@ -149,7 +149,7 @@ def make_future_expense(request):
                         category=detail.category,
                         date=request.META['expense_done_date'],
                         name=detail.name,
-                        has_associated_future_expense=True
+                        future_expense=True
                     )
 
                     return JsonResponse({"message": f"Future Expense created"}, safe=False)
