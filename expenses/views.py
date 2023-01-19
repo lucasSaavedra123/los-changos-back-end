@@ -27,8 +27,6 @@ def expense(request):
             for expense in user_expenses:
                 expenses_as_dict.append(expense.as_dict)
 
-            print(expenses_as_dict)
-
             return JsonResponse(expenses_as_dict, safe=False)
 
         elif request.method == 'POST':
