@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from datetime import date
+from datetime import date, datetime
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.core.serializers import serialize
@@ -20,6 +20,26 @@ def expense(request):
     request_body = request.META['body']
 
     try:
+
+        if request.method == 'POST' or request.method == 'PATCH':
+            if request_body['name'] is None:
+                return Response({'message': "'name' field cannot be null."}, status=status.HTTP_400_BAD_REQUEST)
+            if request_body['value'] is None:
+                return Response({'message': "'value' field cannot be null."}, status=status.HTTP_400_BAD_REQUEST)
+            if request_body['category_id'] is None:
+                return Response({'message': "'category_id' field cannot be null."}, status=status.HTTP_400_BAD_REQUEST)
+            if request_body['date'] is None:
+                return Response({'message': "'date' field cannot be null."}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                if datetime.strptime(request_body['date'], '%Y-%m-%d').date() > date.today():
+                    return Response({"message": "The date is in the future"}, status=status.HTTP_400_BAD_REQUEST)
+            except:
+                return Response({"message": "The date should have format YYYY-MM-DD"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if request.method == 'DELETE' or request.method == 'PATCH':
+            if request_body['id'] is None:
+                return Response({'message': "'id' field cannot be null."}, status=status.HTTP_400_BAD_REQUEST)
+
         if request.method == 'GET':
             user_expenses = Expense.expenses_from_user(request.META['user'])
             expenses_as_dict = []
@@ -29,7 +49,7 @@ def expense(request):
 
             return JsonResponse(expenses_as_dict, safe=False)
 
-        elif request.method == 'POST':
+        if request.method == 'POST':
             category = Category.objects.get(id=request_body['category_id'])
 
             Expense.create_expense_for_user(
@@ -42,7 +62,12 @@ def expense(request):
 
             return Response(None, status=status.HTTP_201_CREATED)
 
-        elif request.method == 'DELETE':
+        try:
+            category_instance = Category.objects.get(id=request_body['id'])
+        except Category.DoesNotExist:
+            return Response({'message': "'id' does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if request.method == 'DELETE':
             expense_instace = Expense.objects.get(id=request_body['id'])
 
             if expense_instace.user != request.META['user']:
@@ -51,7 +76,7 @@ def expense(request):
             expense_instace.delete()
             return Response(None, status=status.HTTP_200_OK)
 
-        elif request.method == 'PATCH':
+        if request.method == 'PATCH':
             expense = Expense.objects.get(id=request_body['id'])
 
             if expense.user != request.META['user']:
@@ -75,6 +100,14 @@ def expense_filter(request):
 
     try:
         response = []
+
+        if request_body['timeline'] is None:
+            return Response({'message': "'timeline' field cannot be null."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            if datetime.strptime(request_body['timeline'][0], '%Y-%m-%d').date() > datetime.strptime(request_body['timeline'][1], '%Y-%m-%d').date():
+                return Response({"message": "First date has to be earlier or equal than second one"}, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response({"message": "Timeline should have the following format [YYYY-MM-DD, YYYY-MM-DD]"}, status=status.HTTP_400_BAD_REQUEST)
 
         first_date = request_body["timeline"][0].split("-")
         second_date = request_body["timeline"][1].split("-")

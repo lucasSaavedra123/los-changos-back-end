@@ -19,16 +19,17 @@ def validate_date_is_not_in_the_future(value):
 
 class Expense(models.Model):
     id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    date = models.DateField(validators=[validate_date_is_not_in_the_future])
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
+    date = models.DateField(validators=[validate_date_is_not_in_the_future], null=False)
     value = models.DecimalField(
         max_digits=11,
         decimal_places=2,
         default=0.01,
-        validators=[MinValueValidator(0.01)])  # Up to $100,000,000
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    name = models.CharField(max_length=50)
-    future_expense = models.BooleanField(default=False)
+        validators=[MinValueValidator(0.01)],
+        null=False)  # Up to $100,000,000
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=False)
+    name = models.CharField(max_length=50, null=False)
+    future_expense = models.BooleanField(default=False, null=False)
 
     @classmethod
     def create_expense_for_user(cls, user, **kwargs):
