@@ -21,14 +21,12 @@ class TestBudgetsModel(TestCase):
             firebase_uid=create_random_string(FIREBASE_UID_LENGTH))
 
     def test_a_budget_is_created_and_has_a_total_limit_with_one_category(self):
-        new_budget = Budget.objects.create(
-            user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
+        new_budget = Budget.objects.create(user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
         new_budget.add_limit(Category.objects.all()[0], 50000.0)
         self.assertEqual(new_budget.total_limit, 50000.0)
 
     def test_a_budget_is_created_and_has_a_total_limit_with_more_categories(self):
-        new_budget = Budget.objects.create(
-            user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
+        new_budget = Budget.objects.create(user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
 
         new_budget.add_limit(Category.objects.all()[0], 10000)
         new_budget.add_limit(Category.objects.all()[1], 10000)
@@ -37,10 +35,8 @@ class TestBudgetsModel(TestCase):
         self.assertEqual(new_budget.total_limit, 35000)
 
     def test_a_budget_cannot_be_created_with_details_of_same_category(self):
-        # top level exception as we want to figure out its exact type
         with self.assertRaises(Exception) as raised:
-            new_budget = Budget.objects.create(
-                user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
+            new_budget = Budget.objects.create(user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
             new_budget.add_limit(Category.objects.all()[0], 10000)
             new_budget.add_limit(Category.objects.all()[0], 50000)
 
@@ -48,24 +44,19 @@ class TestBudgetsModel(TestCase):
 
     def test_budget_cannot_be_finished_in_the_past(self):
         with self.assertRaisesMessage(ValidationError, "Budget date cannot be in the past."):
-            Budget.objects.create(
-                user=self.a_user, initial_date='2050-05-5', final_date='2021-02-1')
+            Budget.objects.create(user=self.a_user, initial_date='2020-05-5', final_date='2021-01-1')
 
     def test_budget_initial_date_should_be_earlier_than_final_date(self):
         with self.assertRaisesMessage(ValidationError, "Budget initial date should be earlier than final date."):
-            Budget.objects.create(
-                user=self.a_user, initial_date='2050-05-5', final_date='2030-01-5')
+            Budget.objects.create(user=self.a_user, initial_date='2050-05-5', final_date='2030-01-5')
 
     def test_user_can_create_two_budgets_that_not_overlap(self):
-        Budget.objects.create(
-            user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
-        Budget.objects.create(
-            user=self.a_user, initial_date='2023-12-6', final_date='2027-05-1')
+        Budget.objects.create(user=self.a_user, initial_date='2022-12-5', final_date='2023-12-5')
+        Budget.objects.create(user=self.a_user, initial_date='2023-12-6', final_date='2027-05-1')
         self.assertEqual(len(Budget.all_from_user(self.a_user)), 2)
 
     def test_user_cannot_create_two_budgets_that_overlap_partially(self):
-        Budget.objects.create(
-            user=self.a_user, initial_date='2026-01-01', final_date='2028-01-01')
+        Budget.objects.create(user=self.a_user, initial_date='2026-01-01', final_date='2028-01-01')
 
         with self.assertRaisesMessage(ValidationError, "Budget is overlapping with another one."):
             Budget.objects.create(
@@ -73,7 +64,7 @@ class TestBudgetsModel(TestCase):
 
         with self.assertRaisesMessage(ValidationError, "Budget is overlapping with another one."):
             Budget.objects.create(
-                user=self.a_user, initial_date='2024-01-01', final_date='2026-01-01')
+                user=self.a_user, initial_date='2027-01-01', final_date='2030-01-01')
 
     def test_user_cannot_create_two_budgets_that_overlap_completely(self):
         Budget.objects.create(
@@ -139,3 +130,19 @@ class TestBudgetsModel(TestCase):
         self.assertEqual(details[2].value, 4500)
         self.assertEqual(details[2].expiration_date, '2023-01-01')
         self.assertEqual(details[2].name, 'AySa Bill')
+
+    def test_user_add_a_future_expense_detail(self):
+        new_budget = Budget.objects.create(
+            user=self.a_user, initial_date='2024-01-01', final_date='2025-01-01')
+
+        details = [
+            new_budget.add_limit(Category.objects.all()[0], 10000),
+            new_budget.add_limit(Category.objects.all()[1], 10000),
+            new_budget.add_future_expense(
+                Category.objects.all()[4], 4500, 'AySa Bill', '2024-05-07')
+        ]
+
+        self.assertEqual(details[2].value, 4500)
+        self.assertEqual(details[2].expiration_date, '2024-05-07')
+        self.assertEqual(details[2].name, 'AySa Bill')
+        self.assertEqual(details[2].expended, False)

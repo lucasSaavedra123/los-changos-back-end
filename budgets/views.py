@@ -70,21 +70,26 @@ def budget(request):
                     return Response({"message": f"Request should include in details field limit and value for limit or future expense detail respectively"}, status=status.HTTP_400_BAD_REQUEST)
 
             return Response(None, status=status.HTTP_201_CREATED)
+        
+        try:
+            budget = Budget.objects.get(id=request_body['id'])
+        except Budget.DoesNotExist:
+            return Response({"message": f"Budget with ID {request_body['id']} does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
-        elif request.method == 'DELETE':
-            budget_instance = Budget.objects.get(id=request_body['id'])
+        if request.method == 'DELETE':
+            budget = Budget.objects.get(id=request_body['id'])
 
-            if budget_instance.user != request.META['user']:
+            if budget.user != request.META['user']:
                 return Response(None, status=status.HTTP_403_FORBIDDEN)
 
-            if not budget_instance.active:
-                budget_instance.delete()
+            if not budget.active:
+                budget.delete()
             else:
                 return Response({"message": f"Current budgets are neither editable and removable"}, status=status.HTTP_400_BAD_REQUEST)
 
             return Response(None, status=status.HTTP_200_OK)
 
-        elif request.method == 'PATCH':
+        if request.method == 'PATCH':
             budget = Budget.objects.get(id=request_body['id'])
 
             if budget.user != request.META['user']:

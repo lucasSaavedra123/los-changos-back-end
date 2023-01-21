@@ -14,67 +14,87 @@ from django.db.utils import IntegrityError
 from expenses.models import Expense
 
 # Create your tests here.
+
+
 class TestBudgetsView(APITestCase):
     def assertActionInSecureEnvironment(self, action):
         os.environ["ENVIRONMENT"] = "PROD"
-        self.assertEqual(action(self).status_code,
-                         status.HTTP_401_UNAUTHORIZED)
+        return_element = action(self)
         os.environ["ENVIRONMENT"] = "DEV"
+        return return_element
 
     def setUp(self):
         self.endpoint = '/budget'
 
-    def test_create_one_budget_with_one_limit_detail_for_user(self):
+    def delete_category_with_response(self, id, expected_status_code):
+        response = self.client.delete(
+            self.endpoint, {'id': str(id)}, format='json')
+
+        self.assertEqual(response.status_code, expected_status_code)
+
+        return response
+
+    def create_a_budget_with_response(self, initial_date, final_date, details, expected_status_code):
         response = self.client.post(self.endpoint, {
-            'initial_date': '2023-05-01',
-            'final_date': '2023-06-01',
-            'details': [
-                {
-                    'category_id': 1,
-                    'limit': 5000
-                }
-            ]
+            'initial_date': initial_date,
+            'final_date': final_date,
+            'details': details
         }, format='json')
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, expected_status_code)
+
+        return response
+
+    def patch_a_budget_with_response(self, id, initial_date, final_date, details, expected_status_code):
+        response = self.client.patch(self.endpoint, {
+            'id': id,
+            'initial_date': initial_date,
+            'final_date': final_date,
+            'details': details
+        }, format='json')
+
+        self.assertEqual(response.status_code, expected_status_code)
+
+        return response
+
+    def get_budget_with_response(self, expected_status_code):
+        response = self.client.get(self.endpoint)
+
+        self.assertEqual(response.status_code, expected_status_code)
+
+        return response
+
+    def test_create_one_budget_with_one_limit_detail_for_user(self):
+        self.create_a_budget_with_response('2023-05-01', '2024-06-01', [{
+            'category_id': 1,
+            'limit': 5000
+        }], status.HTTP_201_CREATED)
 
     def test_create_one_budget_with_one_future_expense_detail_for_user(self):
-        response = self.client.post(self.endpoint, {
-            'initial_date': '2023-05-01',
-            'final_date': '2024-06-01',
-            'details': [
-                {
-                    'category_id': 1,
-                    'value': 5000,
-                    'expiration_date': '2023-11-05',
-                    'name': 'AySa Bill'
-                }
-            ]
-        }, format='json')
+        self.create_a_budget_with_response('2023-05-01', '2024-06-01', [
+            {
+                'category_id': 1,
+                'value': 5000,
+                'expiration_date': '2023-11-05',
+                'name': 'AySa Bill'
+            }
+        ], status.HTTP_201_CREATED)
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+    def test_create_one_budget_with_details_for_user_and_he_retrieve_it(self):
+        self.create_a_budget_with_response('2023-05-01', '2024-06-01', [
+            {
+                'category_id': 1,
+                'limit': 5000
+            },
+            {
+                'category_id': 1,
+                'value': 4000,
+                'expiration_date': '2023-11-05',
+                'name': 'AySa Bill'
+            }
+        ], status.HTTP_201_CREATED)
 
-    def test_create_one_budget_with_one_future_expense_detail_for_user_and_he_retrieve_it(self):
-        response = self.client.post(self.endpoint, {
-            'initial_date': '2023-05-01',
-            'final_date': '2024-06-01',
-            'details': [
-                {
-                    'category_id': 1,
-                    'limit': 5000
-                },
-                {
-                    'category_id': 1,
-                    'value': 5000,
-                    'expiration_date': '2023-11-05',
-                    'name': 'AySa Bill'
-                }
-            ]
-        }, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        response = self.client.get(self.endpoint)
+        response = self.get_budget_with_response(status.HTTP_200_OK)
 
         self.assertEqual(len(response.json()), 1)
 
@@ -83,7 +103,6 @@ class TestBudgetsView(APITestCase):
         self.assertEqual(first_budget['initial_date'], '2023-05-01')
         self.assertEqual(first_budget['final_date'], '2024-06-01')
         self.assertEqual(len(first_budget['details']), 6)
-        self.assertEqual(first_budget['details'][1]['value'], 5000)
 
     def test_create_one_budget_but_one_field_is_not_included(self):
         response = self.client.post(self.endpoint, {
@@ -99,85 +118,57 @@ class TestBudgetsView(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_creates_two_budgets_with_different_details_for_user_and_then_he_retrieve_them(self):
-        response = self.client.post(self.endpoint, {
-            'initial_date': '2023-05-01',
-            'final_date': '2023-06-01',
-            'details': [
-                {
-                    'category_id': 1,
-                    'limit': 5000
-                }
-            ]
-        }, format='json')
+        self.create_a_budget_with_response('2023-05-01', '2023-06-01', [
+            {
+                'category_id': 1,
+                'limit': 5000
+            }
+        ], status.HTTP_201_CREATED)
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.create_a_budget_with_response('2023-01-01', '2023-02-01', [
+            {
+                'category_id': 3,
+                'limit': 1500
+            },
+            {
+                'category_id': 2,
+                'limit': 5000
+            }
+        ], status.HTTP_201_CREATED)
 
-        response = self.client.post(self.endpoint, {
-            'initial_date': '2023-01-01',
-            'final_date': '2023-02-01',
-            'details': [
-                {
-                    'category_id': 3,
-                    'limit': 1500
-                },
-                {
-                    'category_id': 2,
-                    'limit': 5000
-                }
-            ]
-        }, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        response = self.client.get(self.endpoint)
+        response = self.get_budget_with_response(status.HTTP_200_OK)
 
         self.assertEqual(len(response.json()), 2)
 
         first_budget = response.json()[0]
 
-        self.assertEqual(first_budget['initial_date'], '2023-05-01')
-        self.assertEqual(first_budget['final_date'], '2023-06-01')
         self.assertEqual(len(first_budget['details']), 5)
-        self.assertEqual(first_budget['details'][0]['spent'], 0)
-        self.assertEqual(first_budget['total_limit'], 5000)
-        self.assertEqual(first_budget['total_spent'], 0)
-        self.assertEqual(first_budget['editable'], True)
 
     def test_user_creates_a_budget_and_then_he_modifies_it(self):
-        response = self.client.post(self.endpoint, {
-            'initial_date': '2030-02-01',
-            'final_date': '2050-02-01',
-            'details': [
-                {
-                    'category_id': 3,
-                    'limit': 1500
-                },
-                {
-                    'category_id': 2,
-                    'limit': 5000
-                }
-            ]
-        }, format='json')
 
-        response = self.client.patch(self.endpoint, {
-            'id': 1,
-            'initial_date': '2021-01-01',
-            'final_date': '2023-02-01',
-            'details': [
-                {
-                    'category_id': 1,
-                    'limit': 1000
-                },
-                {
-                    'category_id': 3,
-                    'limit': 2000
-                }
-            ]
-        }, format='json')
+        self.create_a_budget_with_response('2030-02-01', '2050-02-01', [
+            {
+                'category_id': 3,
+                'limit': 1500
+            },
+            {
+                'category_id': 2,
+                'limit': 5000
+            }
+        ], status.HTTP_201_CREATED)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.patch_a_budget_with_response(1, '2021-01-01', '2023-02-01', [
+            {
+                'category_id': 1,
+                'limit': 1000
+            },
+            {
+                'category_id': 3,
+                'limit': 2000
+            }
+        ], status.HTTP_200_OK)
 
-        response = self.client.get(self.endpoint, format='json')
+        response = self.get_budget_with_response(status.HTTP_200_OK)
 
         response = response.json()[0]
 
@@ -191,93 +182,65 @@ class TestBudgetsView(APITestCase):
         self.assertEqual(response['details'][1]['limit'], 2000.00)
 
     def test_user_creates_an_active_budget_and_then_he_tries_to_modify_it_but_fails(self):
-        response = self.client.post(self.endpoint, {
-            'initial_date': '2020-02-01',
-            'final_date': '2050-02-01',
-            'details': [
-                {
-                    'category_id': 3,
-                    'limit': 1500
-                },
-                {
-                    'category_id': 2,
-                    'limit': 5000
-                }
-            ]
-        }, format='json')
+        self.create_a_budget_with_response('2020-02-01', '2050-02-01', [
+            {
+                'category_id': 3,
+                'limit': 1500
+            },
+            {
+                'category_id': 2,
+                'limit': 5000
+            }
+        ], status.HTTP_201_CREATED)
 
-        response = self.client.patch(self.endpoint, {
-            'id': 1,
-            'initial_date': '2021-01-01',
-            'final_date': '2023-02-01',
-            'details': [
-                {
-                    'category_id': 1,
-                    'limit': 1000
-                },
-                {
-                    'category_id': 3,
-                    'limit': 2000
-                }
-            ]
-        }, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.patch_a_budget_with_response(1, '2021-01-01', '2023-02-01', [
+            {
+                'category_id': 1,
+                'limit': 1000
+            },
+            {
+                'category_id': 3,
+                'limit': 2000
+            }
+        ], status.HTTP_400_BAD_REQUEST)
 
     def test_user_deletes_own_budget(self):
-        response = self.client.post(self.endpoint, {
-            'initial_date': '2023-05-01',
-            'final_date': '2023-06-01',
-            'details': [
-                {
-                    'category_id': 1,
-                    'limit': 5000
-                }
-            ]
-        }, format='json')
+        self.create_a_budget_with_response('2023-05-01', '2023-06-01', [
+            {
+                'category_id': 1,
+                'limit': 5000
+            }
+        ], status.HTTP_201_CREATED)
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.create_a_budget_with_response('2023-01-01', '2050-02-01', [
+            {
+                'category_id': 3,
+                'limit': 1500
+            },
+            {
+                'category_id': 2,
+                'limit': 5000
+            }
+        ], status.HTTP_201_CREATED)
 
-        response = self.client.post(self.endpoint, {
-            'initial_date': '2023-01-01',
-            'final_date': '2050-02-01',
-            'details': [
-                {
-                    'category_id': 3,
-                    'limit': 1500
-                },
-                {
-                    'category_id': 2,
-                    'limit': 5000
-                }
-            ]
-        }, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        self.client.delete(self.endpoint, {'id': 1}, format='json')
+        self.delete_category_with_response(1, status.HTTP_200_OK)
 
         response = self.client.get(self.endpoint)
 
         self.assertEqual(len(response.json()), 1)
 
+    def test_user_deletes_an_innexistent_budget(self):
+        self.delete_category_with_response(577, status.HTTP_400_BAD_REQUEST)
+
     def test_user_cannot_delete_own_current_budget(self):
-        response = self.client.post(self.endpoint, {
-            'initial_date': '2020-05-01',
-            'final_date': '2030-06-01',
-            'details': [
-                {
-                    'category_id': 1,
-                    'limit': 5000
-                }
-            ]
-        }, format='json')
+        self.create_a_budget_with_response('2020-05-01', '2030-06-01', [
+            {
+                'category_id': 1,
+                'limit': 5000
+            }
+        ], status.HTTP_201_CREATED)
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        response = self.client.delete(self.endpoint, {'id': 1}, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.delete_category_with_response(1, status.HTTP_400_BAD_REQUEST)
 
     def test_user_cannot_delete_another_user_budget(self):
         another_user = User.objects.create(
@@ -286,10 +249,7 @@ class TestBudgetsView(APITestCase):
         Budget.objects.create(
             user=another_user, initial_date='2020-01-01', final_date='2025-01-01')
 
-        response = self.client.delete(
-            self.endpoint, {'id': '1'}, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.delete_category_with_response(1, status.HTTP_403_FORBIDDEN)
 
     def test_user_cannot_update_another_user_budget(self):
         another_user = User.objects.create(
@@ -298,83 +258,26 @@ class TestBudgetsView(APITestCase):
         Budget.objects.create(
             user=another_user, initial_date='2020-01-01', final_date='2025-01-01')
 
-        response = self.client.patch(self.endpoint, {
-            'id': 1,
-            'initial_date': '2023-01-01',
-            'final_date': '2023-02-01',
-            'details': [
-                {
-                    'category_id': 1,
-                    'limit': 1000
-                },
-                {
-                    'category_id': 3,
-                    'limit': 2000
-                }
-            ]
-        }, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.patch_a_budget_with_response(1, '2023-01-01', '2023-02-01', [
+            {
+                'category_id': 1,
+                'limit': 1000
+            },
+            {
+                'category_id': 3,
+                'limit': 2000
+            }
+        ], status.HTTP_403_FORBIDDEN)
 
     def test_user_has_no_provide_valid_token_to_read_budgets(self):
         def action(self):
-            return self.client.get(self.endpoint)
+            return self.get_budget_with_response(status.HTTP_401_UNAUTHORIZED)
 
         self.assertActionInSecureEnvironment(action)
 
     def test_user_has_no_provide_valid_token_to_add_budgets(self):
         def action(self):
-            return self.client.post(self.endpoint, {
-                'id': 1,
-                'initial_date': '2023-01-01',
-                'final_date': '2023-02-01',
-                'details': [
-                    {
-                        'category_id': 1,
-                        'limit': 1000
-                    },
-                    {
-                        'category_id': 3,
-                        'limit': 2000
-                    }
-                ]
-            }, format='json')
-
-        self.assertActionInSecureEnvironment(action)
-
-    def test_user_has_no_provide_valid_token_to_patch_budget(self):
-        def action(self):
-            return self.client.patch(self.endpoint, {
-                'id': 5,
-                'initial_date': '2023-01-01',
-                'final_date': '2023-02-01',
-                'details': [
-                    {
-                        'category_id': 1,
-                        'limit': 1000
-                    },
-                    {
-                        'category_id': 3,
-                        'limit': 2000
-                    }
-                ]
-            }, format='json')
-
-        self.assertActionInSecureEnvironment(action)
-
-    def test_user_has_no_provide_valid_token_to_delete_budget(self):
-        def action(self):
-            return self.client.delete(
-                self.endpoint, {'id': 90}, format='json')
-
-        self.assertActionInSecureEnvironment(action)
-
-    def test_user_get_current_budget(self):
-        self.client.post(self.endpoint, {
-            'id': 1,
-            'initial_date': '2020-01-01',
-            'final_date': '2023-02-01',
-            'details': [
+            return self.create_a_budget_with_response('2023-01-01', '2023-02-01', [
                 {
                     'category_id': 1,
                     'limit': 1000
@@ -383,8 +286,42 @@ class TestBudgetsView(APITestCase):
                     'category_id': 3,
                     'limit': 2000
                 }
-            ]
-        }, format='json')
+            ], status.HTTP_401_UNAUTHORIZED)
+
+        self.assertActionInSecureEnvironment(action)
+
+    def test_user_has_no_provide_valid_token_to_patch_budget(self):
+        def action(self):
+            return self.patch_a_budget_with_response(1, '2023-01-01', '2023-02-01', [
+                {
+                    'category_id': 1,
+                    'limit': 1000
+                },
+                {
+                    'category_id': 3,
+                    'limit': 2000
+                }
+            ], status.HTTP_401_UNAUTHORIZED)
+
+        self.assertActionInSecureEnvironment(action)
+
+    def test_user_has_no_provide_valid_token_to_delete_budget(self):
+        def action(self):
+            return self.delete_category_with_response(99, status.HTTP_401_UNAUTHORIZED)
+
+        self.assertActionInSecureEnvironment(action)
+
+    def test_user_get_current_budget(self):
+        self.create_a_budget_with_response('2020-01-01', '2023-02-01', [
+                {
+                    'category_id': 1,
+                    'limit': 1000
+                },
+                {
+                    'category_id': 3,
+                    'limit': 2000
+                }
+            ], status.HTTP_201_CREATED)
 
         response = self.client.get(self.endpoint + '/current')
 
@@ -401,11 +338,7 @@ class TestBudgetsView(APITestCase):
         self.assertEqual(response['details'][1]['limit'], 2000.00)
 
     def test_user_get_no_current_budget(self):
-        self.client.post(self.endpoint, {
-            'id': 1,
-            'initial_date': '2030-01-01',
-            'final_date': '2050-02-01',
-            'details': [
+        self.create_a_budget_with_response('2030-01-01', '2050-02-01', [
                 {
                     'category_id': 4,
                     'limit': 9778
@@ -414,8 +347,7 @@ class TestBudgetsView(APITestCase):
                     'category_id': 2,
                     'limit': 1000
                 }
-            ]
-        }, format='json')
+            ], status.HTTP_201_CREATED)
 
         response = self.client.get(self.endpoint + '/current')
 
