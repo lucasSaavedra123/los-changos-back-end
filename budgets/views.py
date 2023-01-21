@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from expenses.models import Expense
-from budgets.models import Budget, Detail
+from budgets.models import Budget, Detail, FutureExpenseDetail
 from categories.models import Category
 
 # Create your views here.
@@ -144,7 +144,7 @@ def make_future_expense(request):
             return JsonResponse({"message": f"User has no current budget"}, safe=False)
         else:
             for detail in Detail.from_budget(current_user_budget):
-                if detail.id == request.META['body']['future_expense_id']:
+                if detail.id == request.META['body']['future_expense_id'] and detail.__class__ == FutureExpenseDetail:
                     detail.expended = True
                     detail.save()
 
