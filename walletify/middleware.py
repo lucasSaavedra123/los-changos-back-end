@@ -19,6 +19,7 @@ class CustomFirebaseAuthentication:
     def process_view(self, request, view_func, view_args, view_kwargs):
         if os.environ.get('ENVIRONMENT') == "DEV":
             request.META['uid'] = 'randomrandomrandomrandomrand'
+            request.META['email'] = 'random@random.com'
         else:
             try:
                 authorization_header = request.META.get('HTTP_AUTHORIZATION')
