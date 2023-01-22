@@ -190,3 +190,6 @@ class FutureExpenseDetail(Detail):
             'expended': self.expended,
             'expiration_date': self.expiration_date
         }
+
+    def should_be_notified(self):
+        return (self.expiration_date - date.today()).days == 3 and not self.expended

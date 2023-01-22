@@ -4,5 +4,5 @@ from .tasks import notify_expiration_expenses
 
 def start():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(notify_expiration_expenses, trigger='cron', hour='12', minute='00')
+    scheduler.add_job(notify_expiration_expenses, trigger='cron', hour='14', minute='57')
     scheduler.start()
