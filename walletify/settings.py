@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 import firebase_admin
 import json
+from walletify.scheduler import start
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -175,3 +176,6 @@ EMAIL_HOST = os.environ.get('MAILTRAP_EMAIL_HOST')
 EMAIL_HOST_USER = os.environ.get('MAILTRAP_EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('MAILTRAP_EMAIL_HOST_PASSWORD')
 EMAIL_PORT = os.environ.get('MAILTRAP_EMAIL_PORT')
+
+#Iniciamos el schedule!
+#start()

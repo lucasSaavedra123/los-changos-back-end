@@ -1,4 +1,6 @@
 from django.core.mail import send_mail
+from budgets.models import FutureExpenseDetail
+
 
 """
 send_mail(
@@ -21,3 +23,7 @@ def schedule_mail():
     email = EmailMessage(mail_subject, message, to=[to_email])
     email.send()
 """
+
+
+def notify_expiration_expenses():
+    print("Sending Email!!!")
