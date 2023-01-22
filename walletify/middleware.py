@@ -25,6 +25,7 @@ class CustomFirebaseAuthentication:
                 token = authorization_header.replace("Bearer ", "")
                 decoded_token = auth.verify_id_token(token)
                 request.META['uid'] = decoded_token['user_id']
+                request.META['email'] = decoded_token['email']
             except KeyError:
                 return JsonResponse({"message": "A valid token was not provided"}, status=401)
             except AttributeError:
@@ -48,7 +49,7 @@ class CustomUserCreation:
     def process_view(self, request, view_func, view_args, view_kwargs):
 
         if not User.objects.filter(firebase_uid=request.META['uid']):
-            User.objects.create(firebase_uid=request.META['uid'])
+            User.objects.create(firebase_uid=request.META['uid'], email=request.META['email'])
 
         request.META['user'] = User.objects.get(firebase_uid=request.META['uid'])
 
