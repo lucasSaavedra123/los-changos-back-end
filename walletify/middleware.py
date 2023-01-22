@@ -49,10 +49,10 @@ class CustomUserCreation:
 
     def process_view(self, request, view_func, view_args, view_kwargs):
 
-        if not User.objects.filter(firebase_uid=request.META['uid']):
+        if not User.objects.filter(firebase_uid=request.META['uid'], email=request.META['email']).exists():
             User.objects.create(firebase_uid=request.META['uid'], email=request.META['email'])
 
-        request.META['user'] = User.objects.get(firebase_uid=request.META['uid'])
+        request.META['user'] = User.objects.get(firebase_uid=request.META['uid'], email=request.META['email'])
 
         return None
 
