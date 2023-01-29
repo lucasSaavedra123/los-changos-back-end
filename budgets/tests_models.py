@@ -128,7 +128,7 @@ class TestBudgetsModel(TestCase):
         ]
 
         self.assertEqual(details[2].value, 4500)
-        self.assertEqual(details[2].expiration_date, '2023-01-01')
+        self.assertEqual(details[2].expiration_date.strftime("%Y-%m-%d"), '2023-01-01')
         self.assertEqual(details[2].name, 'AySa Bill')
 
     def test_user_add_a_future_expense_detail(self):
@@ -143,6 +143,16 @@ class TestBudgetsModel(TestCase):
         ]
 
         self.assertEqual(details[2].value, 4500)
-        self.assertEqual(details[2].expiration_date, '2024-05-07')
+        self.assertEqual(details[2].expiration_date.strftime("%Y-%m-%d"), '2024-05-07')
         self.assertEqual(details[2].name, 'AySa Bill')
         self.assertEqual(details[2].expended, False)
+
+    def test_user_cannot_create_future_expense_out_of_budget_dates(self):
+        new_budget = Budget.objects.create(
+            user=self.a_user, initial_date='2024-01-01', final_date='2025-01-01')
+
+        with self.assertRaisesMessage(ValidationError, "Future Expense has to be between the budget dates."):
+            new_budget.add_future_expense(Category.objects.all()[4], 4500, 'AySa Bill', '2020-05-07')
+
+        with self.assertRaisesMessage(ValidationError, "Future Expense has to be between the budget dates."):
+            new_budget.add_future_expense(Category.objects.all()[4], 4500, 'AySa Bill', '2028-01-01')

@@ -9,6 +9,7 @@ from rest_framework import status
 from expenses.models import Expense
 from budgets.models import Budget, Detail, FutureExpenseDetail
 from categories.models import Category
+from django.core.exceptions import ValidationError
 
 # Create your views here.
 
@@ -64,8 +65,13 @@ def budget(request):
                             id=detail['category_id']), detail['limit'])
                 elif 'value' in detail:
                     if detail['value'] > 0:
-                        new_budget.add_future_expense(Category.objects.get(
-                            id=detail['category_id']), detail['value'], detail['name'], detail['expiration_date'])
+                        try:
+                            new_budget.add_future_expense(Category.objects.get(
+                                id=detail['category_id']), detail['value'], detail['name'], detail['expiration_date'])
+                        except ValidationError as validation_error:
+                            new_budget.delete()
+                            return Response({"message": f"{validation_error}"}, status=status.HTTP_400_BAD_REQUEST)
+                        
                 else:
                     return Response({"message": f"Request should include in details field limit and value for limit or future expense detail respectively"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -111,9 +117,12 @@ def budget(request):
                             budget.add_limit(Category.objects.get(
                                 id=detail['category_id']), detail['limit'])
                     elif 'value' in detail:
-                        if detail['value'] > 0:
-                            budget.add_future_expense(Category.objects.get(
-                                id=detail['category_id']), detail['value'], detail['name'], detail['expiration_date'])
+                        try:
+                            if detail['value'] > 0:
+                                budget.add_future_expense(Category.objects.get(
+                                    id=detail['category_id']), detail['value'], detail['name'], detail['expiration_date'])
+                        except ValidationError as validation_error:
+                            return Response({"message": f"{validation_error}"}, status=status.HTTP_400_BAD_REQUEST)
                     else:
                         return Response({"message": f"Request should include in details field limit and value for limit or future expense detail respectively"}, status=status.HTTP_400_BAD_REQUEST)
 

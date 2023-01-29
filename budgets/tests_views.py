@@ -80,6 +80,25 @@ class TestBudgetsView(APITestCase):
             }
         ], status.HTTP_201_CREATED)
 
+    def test_create_one_budget_with_one_future_expense_but_fails_because_detail_is_out_of_budget_dates(self):
+        self.create_a_budget_with_response('2023-05-01', '2024-06-01', [
+            {
+                'category_id': 1,
+                'value': 5000,
+                'expiration_date': '2021-11-05',
+                'name': 'AySa Bill'
+            }
+        ], status.HTTP_400_BAD_REQUEST)
+
+        self.create_a_budget_with_response('2023-05-01', '2024-06-01', [
+            {
+                'category_id': 1,
+                'value': 5000,
+                'expiration_date': '2029-03-01',
+                'name': 'AySa Bill'
+            }
+        ], status.HTTP_400_BAD_REQUEST)
+
     def test_create_one_budget_with_details_for_user_and_he_retrieve_it(self):
         self.create_a_budget_with_response('2023-05-01', '2024-06-01', [
             {

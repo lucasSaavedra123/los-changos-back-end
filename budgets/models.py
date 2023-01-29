@@ -193,3 +193,11 @@ class FutureExpenseDetail(Detail):
 
     def should_be_notified(self):
         return (self.expiration_date - date.today()).days == 3 and not self.expended
+    
+    def save(self, *args, update=False, **kwargs):
+        self.full_clean()
+
+        if not (self.assigned_budget.initial_date <= self.expiration_date <= self.assigned_budget.final_date):
+            raise ValidationError("Future Expense has to be between the budget dates.")
+
+        super(FutureExpenseDetail, self).save(*args, **kwargs)
