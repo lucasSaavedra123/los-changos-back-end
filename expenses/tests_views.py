@@ -249,6 +249,16 @@ class TestExpensesView(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_user_create_request_with_inexistent_category(self):
+        response = self.client.post(self.endpoint, {
+            'date': '2021-01-30',
+            'value': 250.5,
+            'category_id': 7559,
+            'name': "Another expense"
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_user_forgots_to_include_field_in_patch_request(self):
         response = self.client.patch(self.endpoint, {
             'value': 250.5,

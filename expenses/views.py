@@ -74,48 +74,45 @@ def expense(request):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    try:
-        if request.method == 'GET':
-            user_expenses = Expense.expenses_from_user(request.META['user'])
-            expenses_as_dict = [expense.as_dict for expense in user_expenses]
-            return JsonResponse(expenses_as_dict, safe=False)
+    if request.method == 'GET':
+        user_expenses = Expense.expenses_from_user(request.META['user'])
+        expenses_as_dict = [expense.as_dict for expense in user_expenses]
+        return JsonResponse(expenses_as_dict, safe=False)
 
-        if request.method == 'POST':
-            Expense.create_expense_for_user(
-                request.META['user'],
-                value=request_body['value'],
-                category=Category.objects.get(id=request_body['category_id']),
-                date=request_body['date'],
-                name=request_body['name'],
-            )
+    if request.method == 'POST':
+        Expense.create_expense_for_user(
+            request.META['user'],
+            value=request_body['value'],
+            category=Category.objects.get(id=request_body['category_id']),
+            date=request_body['date'],
+            name=request_body['name'],
+        )
 
-            return Response(None, status=status.HTTP_201_CREATED)
+        return Response(None, status=status.HTTP_201_CREATED)
 
-        if request.method == 'DELETE':
-            expense_instace = Expense.objects.get(id=request_body['id'])
+    if request.method == 'DELETE':
+        expense_instace = Expense.objects.get(id=request_body['id'])
 
-            if expense_instace.user != request.META['user']:
-                return Response(None, status=status.HTTP_403_FORBIDDEN)
+        if expense_instace.user != request.META['user']:
+            return Response(None, status=status.HTTP_403_FORBIDDEN)
 
-            expense_instace.delete()
-            return Response(None, status=status.HTTP_200_OK)
+        expense_instace.delete()
+        return Response(None, status=status.HTTP_200_OK)
 
-        if request.method == 'PATCH':
-            expense = Expense.objects.get(id=request_body['id'])
+    if request.method == 'PATCH':
+        expense = Expense.objects.get(id=request_body['id'])
 
-            if expense.user != request.META['user']:
-                return Response(None, status=status.HTTP_403_FORBIDDEN)
+        if expense.user != request.META['user']:
+            return Response(None, status=status.HTTP_403_FORBIDDEN)
 
-            expense.name = request_body['name']
-            expense.value = request_body['value']
-            expense.date = request_body['date']
-            expense.category = Category.objects.get(id=request_body['category_id'])
+        expense.name = request_body['name']
+        expense.value = request_body['value']
+        expense.date = request_body['date']
+        expense.category = Category.objects.get(id=request_body['category_id'])
 
-            expense.save()
+        expense.save()
 
-            return Response(None, status=status.HTTP_200_OK)
-    except KeyError as key_error_exception:
-        return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(None, status=status.HTTP_200_OK)
 
 def is_on_the_future_validation(date_list):
     try:
@@ -141,44 +138,40 @@ def expense_filter(request):
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    try:
-        response = []
-        first_date = [int(string_piece) for string_piece in request_body["timeline"][0].split("-")]
-        second_date = [int(string_piece) for string_piece in request_body["timeline"][1].split("-")]
+    response = []
+    first_date = [int(string_piece) for string_piece in request_body["timeline"][0].split("-")]
+    second_date = [int(string_piece) for string_piece in request_body["timeline"][1].split("-")]
 
-        if "category_id" not in request_body or request_body['category_id'] == []:
-            expenses = Expense.filter_within_timeline_from_user(
+    if request_body.get('category_id', None) is None or request_body['category_id'] == []:
+        expenses = Expense.filter_within_timeline_from_user(
+            request.META['user'],
+            date(*first_date),
+            date(*second_date)
+        )
+
+        response = [expense.as_dict for expense in expenses]
+    else:
+        if isinstance(request_body['category_id'], Sequence):
+            expenses = Expense.objects.none()
+
+            for category_id in request_body['category_id']:
+                expenses = Expense.filter_by_category_within_timeline_from_user(
                 request.META['user'],
                 date(*first_date),
-                date(*second_date)
+                date(*second_date),
+                Category.objects.get(id=category_id)
+                )
+
+                response += [expense.as_dict for expense in expenses]
+
+        else:
+            expenses = Expense.filter_by_category_within_timeline_from_user(
+                request.META['user'],
+                date(*first_date),
+                date(*second_date),
+                Category.objects.get(id=request_body['category_id'])
             )
 
             response = [expense.as_dict for expense in expenses]
-        else:
-            if isinstance(request_body['category_id'], Sequence):
-                expenses = Expense.objects.none()
 
-                for category_id in request_body['category_id']:
-                    expenses = Expense.filter_by_category_within_timeline_from_user(
-                    request.META['user'],
-                    date(*first_date),
-                    date(*second_date),
-                    Category.objects.get(id=category_id)
-                    )
-
-                    response += [expense.as_dict for expense in expenses]
-
-            else:
-                expenses = Expense.filter_by_category_within_timeline_from_user(
-                    request.META['user'],
-                    date(*first_date),
-                    date(*second_date),
-                    Category.objects.get(id=request_body['category_id'])
-                )
-
-                response = [expense.as_dict for expense in expenses]
-
-        return JsonResponse(response, safe=False)
-
-    except KeyError as key_error_exception:
-        return Response({"message": f"{key_error_exception} was not provided"}, status=status.HTTP_400_BAD_REQUEST)
+    return JsonResponse(response, safe=False)

@@ -156,3 +156,7 @@ class TestBudgetsModel(TestCase):
 
         with self.assertRaisesMessage(ValidationError, "Future Expense has to be between the budget dates."):
             new_budget.add_future_expense(Category.objects.all()[4], 4500, 'AySa Bill', '2028-01-01')
+
+    def test_user_cannot_create_budget_with_final_date_in_the_past(self):
+        with self.assertRaisesMessage(ValidationError, "Budget date cannot be in the past"):
+            Budget.objects.create(user=self.a_user, initial_date='2022-01-01', final_date='2023-01-01')
