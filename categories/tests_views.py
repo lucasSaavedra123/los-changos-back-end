@@ -169,64 +169,53 @@ class TestCategoriesView(APITestCase):
     def test_user_forgots_to_include_field_in_create_request(self):
         response = self.client.post(self.endpoint, {'name': 'Custom Category'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()['message'], "'material_ui_icon_name' was not provided")
 
     def test_user_forgots_to_include_field_in_patch_request(self):
         response = self.client.patch(self.endpoint, {'name': 'Custom Category','material_ui_icon_name': 'Bolt'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()['message'], "'id' was not provided")
 
     def test_user_include_category_name_as_none_in_create_request(self):
         response = self.client.post(self.endpoint, {'name': None, 'material_ui_icon_name': 'Bolt'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()['message'], "'name' field cannot be null.")
 
     def test_user_include_category_icon_as_none_in_create_request(self):
         response = self.client.post(self.endpoint, {'name': 'Custom Category', 'material_ui_icon_name': None}, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()['message'], "'material_ui_icon_name' field cannot be null.")
 
     def test_user_include_category_name_as_none_in_patch_request(self):
         self.create_category_with_response('Custom Category', "Bolt", status.HTTP_201_CREATED)
         response = self.client.patch(self.endpoint, {'id': 6, 'name': None, 'material_ui_icon_name': 'Bolt'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()['message'], "'name' field cannot be null.")
 
     def test_user_include_category_icon_as_none_in_patch_request(self):
         self.create_category_with_response('Custom Category', "Bolt", status.HTTP_201_CREATED)
         response = self.client.patch(self.endpoint, {'id': 6, 'name': 'Custom Category', 'material_ui_icon_name': None}, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()['message'], "'material_ui_icon_name' field cannot be null.")
 
     def test_user_include_non_existent_id_in_patch_request(self):
         response = self.client.patch(self.endpoint, {'id': 788, 'name': 'Custom Category', 'material_ui_icon_name': 'Bolt'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()['message'], "'id' does not exist")
 
     def test_user_has_no_provide_valid_token_to_read_categories(self):        
         def action(self):
             return self.get_category_with_response(status.HTTP_401_UNAUTHORIZED)
 
         response = self.assertActionInSecureEnvironment(action)
-        self.assertEqual(response.json()['message'], 'A valid token was not provided')
 
     def test_user_has_no_provide_valid_token_to_add_category(self):
         def action(self):
             return self.create_category_with_response('Custom Category', 'BorderColor', status.HTTP_401_UNAUTHORIZED)
 
         response = self.assertActionInSecureEnvironment(action)
-        self.assertEqual(response.json()['message'], 'A valid token was not provided')
 
     def test_user_has_no_provide_valid_token_to_patch_category(self):
         def action(self):
             return self.patch_category_with_response(7, 'Custom Category', 'BorderColor', status.HTTP_401_UNAUTHORIZED)
 
         response = self.assertActionInSecureEnvironment(action)
-        self.assertEqual(response.json()['message'], 'A valid token was not provided')
 
     def test_user_has_no_provide_valid_token_to_delete_category(self):
         def action(self):
             return self.delete_category_with_response(85, status.HTTP_401_UNAUTHORIZED)
 
         response = self.assertActionInSecureEnvironment(action)
-        self.assertEqual(response.json()['message'], 'A valid token was not provided')

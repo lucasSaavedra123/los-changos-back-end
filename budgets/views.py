@@ -4,54 +4,78 @@ from django.http import JsonResponse
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, serializers
+
+from datetime import datetime
 
 from expenses.models import Expense
-from budgets.models import Budget, Detail, FutureExpenseDetail
+from budgets.models import Budget, Detail, FutureExpenseDetail, LimitDetail
 from categories.models import Category
 from django.core.exceptions import ValidationError
 
 # Create your views here.
+def exist_budget_validation(budget_id):
+    try:
+        Budget.objects.get(id=budget_id)
+    except Budget.DoesNotExist:
+        raise serializers.ValidationError(f"Budget {budget_id} doesn't exist")
 
+class PostOrPatchBudgetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Budget
+        fields = ['initial_date', 'final_date']
+
+    initial_date = serializers.DateField(required=True)
+    final_date = serializers.DateField(required=True)
+
+class PatchOrDeleteBudgetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Budget
+        fields = ['id', 'initial_date', 'final_date']
+
+    initial_date = serializers.DateField(required=False)
+    final_date = serializers.DateField(required=False)
+    id = serializers.IntegerField(required=True, validators=[exist_budget_validation])
+
+class GetBudgetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Budget
+        fields = []
 
 @api_view(['GET', 'POST', 'PATCH', 'DELETE'])
 def budget(request):
     request_body = request.META['body']
 
+    serializers = {
+        'POST': [PostOrPatchBudgetSerializer(data=request_body)],
+        'PATCH': [PatchOrDeleteBudgetSerializer(data=request_body), PostOrPatchBudgetSerializer(data=request_body)],
+        'GET': [GetBudgetSerializer(data=request_body)],
+        'DELETE': [PatchOrDeleteBudgetSerializer(data=request_body)],
+    }
+
+    for serializer in serializers[request.method]:
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    #The following validations cannot be included in Django's serializers
+    if request.method == 'POST' or request.method == 'PATCH':
+        if datetime.strptime(request_body['initial_date'], '%Y-%d-%m') > datetime.strptime(request_body['final_date'], '%Y-%d-%m'):
+            return Response({"message": f"Initial date cannot be greater than final date"}, status=status.HTTP_400_BAD_REQUEST)
+        
     try:
         if request.method == 'GET':
             user_budgets = Budget.all_from_user(request.META['user'])
+            budgets_as_dict = [budget.as_dict for budget in user_budgets]
+            all_categories_from_user = Category.categories_from_user(request.META['user'])
 
-            budgets_as_dict = []
-
-            for budget in user_budgets:
-                budgets_as_dict.append(budget.as_dict)
-
-            all_categories_from_user = Category.categories_from_user(
-                request.META['user'])
-
-            # Front-End requires all limits with each category
-            # There should be an improvement for this. At the end, improvements will be done
+            # Front-End requires all limits with each category, even if it's 0
             for budget_index in range(len(budgets_as_dict)):
-                categories_that_have_limit_budgets = []
-
-                for detail in budgets_as_dict[budget_index]['details']:
-                    if detail.get('limit', None) is not None:
-                        categories_that_have_limit_budgets.append(
-                            detail['category']['id'])
-
-                for user_category in all_categories_from_user:
-                    if user_category.id not in categories_that_have_limit_budgets:
-                        budgets_as_dict[budget_index]['details'].append({
-                            'category': user_category.as_dict,
-                            'limit': 0,
-                            'spent': 0
-                        })
+                categories_that_have_limit_budgets = [ detail['category']['id'] for detail in budgets_as_dict[budget_index]['details'] if detail.get('limit', None) is not None ]
+                budgets_as_dict[budget_index]['details'] += [{ 'category': user_category.as_dict, 'limit': 0, 'spent': 0 } for user_category in all_categories_from_user if user_category.id not in categories_that_have_limit_budgets]
 
             return JsonResponse(budgets_as_dict, safe=False)
 
         elif request.method == 'POST':
-            Budget.force = True
             new_budget = Budget.objects.create(
                 user=request.META['user'],
                 initial_date=request_body['initial_date'],
@@ -61,8 +85,7 @@ def budget(request):
             for detail in request_body['details']:
                 if 'limit' in detail:
                     if detail['limit'] > 0:
-                        new_budget.add_limit(Category.objects.get(
-                            id=detail['category_id']), detail['limit'])
+                        new_budget.add_limit(Category.objects.get(id=detail['category_id']), detail['limit'])
                 elif 'value' in detail:
                     if detail['value'] > 0:
                         try:
@@ -104,28 +127,34 @@ def budget(request):
             if budget.active:
                 return Response({"message": f"Current budgets are neither editable and removable"}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                budget.initial_date = request_body['initial_date']
-                budget.final_date = request_body['final_date']
+                current_details = LimitDetail.from_budget(budget)
 
-                # Esto hay que revisarlo. Osea, si falla algo abajo, se borraron todos los detalles sin querer!!!
-                for detail in Detail.from_budget(budget):
+                for detail in current_details:
                     detail.delete()
 
-                for detail in request_body['details']:
-                    if 'limit' in detail:
-                        if detail['limit'] > 0:
-                            budget.add_limit(Category.objects.get(
-                                id=detail['category_id']), detail['limit'])
-                    elif 'value' in detail:
-                        try:
-                            if detail['value'] > 0:
-                                budget.add_future_expense(Category.objects.get(
-                                    id=detail['category_id']), detail['value'], detail['name'], detail['expiration_date'])
-                        except ValidationError as validation_error:
-                            return Response({"message": f"{validation_error}"}, status=status.HTTP_400_BAD_REQUEST)
-                    else:
-                        return Response({"message": f"Request should include in details field limit and value for limit or future expense detail respectively"}, status=status.HTTP_400_BAD_REQUEST)
+                try:
+                    for detail in request_body['details']:
+                        if 'limit' in detail:
+                            if detail['limit'] > 0:
+                                budget.add_limit(Category.objects.get(
+                                    id=detail['category_id']), detail['limit'])
+                        elif 'value' in detail:
+                            try:
+                                if detail['value'] > 0:
+                                    budget.add_future_expense(Category.objects.get(
+                                        id=detail['category_id']), detail['value'], detail['name'], detail['expiration_date'])
+                            except ValidationError as validation_error:
+                                return Response({"message": f"{validation_error}"}, status=status.HTTP_400_BAD_REQUEST)
+                        else:
+                            return Response({"message": f"Request should include in details field limit and value for limit or future expense detail respectively"}, status=status.HTTP_400_BAD_REQUEST)
+                except Exception as e:
+                    #If something failed, we recover the previous state
+                    for detail in current_details:
+                        detail.save()
+                    return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 
+                budget.initial_date = request_body['initial_date']
+                budget.final_date = request_body['final_date']
                 budget.save(update=True)
 
             return Response(None, status=status.HTTP_200_OK)

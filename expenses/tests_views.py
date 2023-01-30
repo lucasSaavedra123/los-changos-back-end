@@ -222,7 +222,7 @@ class TestExpensesView(APITestCase):
         self.assertExpenseInformationIsRight(
             expense_json, 250.5, '2020-06-11', 3, "Another Expense", False)
 
-    def test_user_cannot_update_future_date(self):
+    def test_user_cannot_update_expense_to_a_future_date(self):
         self.create_expense_with_response(
             250.5, '2021-01-30', 3, "Another Expense", status.HTTP_201_CREATED)
         self.patch_expense_with_response(
@@ -233,7 +233,7 @@ class TestExpensesView(APITestCase):
         self.assertExpenseInformationIsRight(
             expense_json, 250.5, '2021-01-30', 3, "Another Expense", False)
 
-    def test_user_cannot_update_future_date(self):
+    def test_user_cannot_create_expense_with_future_date(self):
         self.create_expense_with_response(
             250.5, '2065-11-05', 3, "Another Expense", status.HTTP_400_BAD_REQUEST)
         response = self.get_expense_with_response(status.HTTP_200_OK)

@@ -4,40 +4,61 @@ from django.http import JsonResponse
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, serializers
 
 from categories.models import Category
 
+def exist_category_validation(category_id):
+    try:
+        Category.objects.get(id=category_id)
+    except Category.DoesNotExist:
+        raise serializers.ValidationError(f"Category {category_id} doesn't exist")
+
+class PostOrPatchExpenseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['name', 'material_ui_icon_name']
+
+    material_ui_icon_name = serializers.CharField(required=True)
+    name = serializers.CharField(required=True)
+
+class PatchOrDeleteExpenseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'material_ui_icon_name']
+
+    material_ui_icon_name = serializers.CharField(required=False)
+    name = serializers.CharField(required=False)
+    id = serializers.IntegerField(required=True, validators=[exist_category_validation])
+
+class GetExpenseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = []
 
 # Create your views here.
 @api_view(['GET', 'POST', 'PATCH', 'DELETE'])
 def category(request):
     request_body = request.META['body']
 
+    serializers = {
+        'POST': [PostOrPatchExpenseSerializer(data=request_body)],
+        'PATCH': [PatchOrDeleteExpenseSerializer(data=request_body), PostOrPatchExpenseSerializer(data=request_body)],
+        'GET': [GetExpenseSerializer(data=request_body)],
+        'DELETE': [PatchOrDeleteExpenseSerializer(data=request_body)],
+    }
+
+    for serializer in serializers[request.method]:
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     try:
-
-        if request.method == 'POST' or request.method == 'PATCH':
-            if request_body['name'] is None:
-                return Response({'message': "'name' field cannot be null."}, status=status.HTTP_400_BAD_REQUEST)
-            if request_body['material_ui_icon_name'] is None:
-                return Response({'message': "'material_ui_icon_name' field cannot be null."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if request.method == 'DELETE' or request.method == 'PATCH':
-            if request_body['id'] is None:
-                return Response({'message': "'id' field cannot be null."}, status=status.HTTP_400_BAD_REQUEST)
-
         if request.method == 'GET':
             user_categories = Category.categories_from_user(request.META['user'])
-
-            categories_as_dict = []
-
-            for category in user_categories:
-                categories_as_dict.append(category.as_dict)
-
+            categories_as_dict = [category.as_dict for category in user_categories]
             return JsonResponse(categories_as_dict, safe=False)
 
         elif request.method == 'POST':
-
             Category.create_category_for_user(
                 request.META['user'],
                 material_ui_icon_name=request_body['material_ui_icon_name'],
@@ -46,10 +67,7 @@ def category(request):
 
             return Response(None, status=status.HTTP_201_CREATED)
 
-        try:
-            category_instance = Category.objects.get(id=request_body['id'])
-        except Category.DoesNotExist:
-            return Response({'message': "'id' does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        category_instance = Category.objects.get(id=request_body['id'])
 
         if category_instance.static or category_instance.user != request.META['user']:
             return Response(None, status=status.HTTP_403_FORBIDDEN)
