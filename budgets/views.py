@@ -82,28 +82,24 @@ def budget(request):
                 final_date=request_body['final_date']
             )
 
-            for detail in request_body['details']:
-                if 'limit' in detail:
-                    if detail['limit'] > 0:
-                        new_budget.add_limit(Category.objects.get(id=detail['category_id']), detail['limit'])
-                elif 'value' in detail:
-                    if detail['value'] > 0:
-                        try:
-                            new_budget.add_future_expense(Category.objects.get(
-                                id=detail['category_id']), detail['value'], detail['name'], detail['expiration_date'])
-                        except ValidationError as validation_error:
-                            new_budget.delete()
-                            return Response({"message": f"{validation_error}"}, status=status.HTTP_400_BAD_REQUEST)
-                        
-                else:
-                    return Response({"message": f"Request should include in details field limit and value for limit or future expense detail respectively"}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                for detail in request_body['details']:
+                    if 'limit' in detail:
+                        if detail['limit'] > 0:
+                            new_budget.add_limit(Category.objects.get(id=detail['category_id']), detail['limit'])
+                    elif 'value' in detail:
+                        if detail['value'] > 0:
+                            new_budget.add_future_expense(Category.objects.get(id=detail['category_id']), detail['value'], detail['name'], detail['expiration_date'])                        
+                    else:
+                        new_budget.delete()
+                        return Response({"message": f"Request should include in details field limit and value for limit or future expense detail respectively"}, status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                new_budget.delete()
+                return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 
             return Response(None, status=status.HTTP_201_CREATED)
-        
-        try:
-            budget = Budget.objects.get(id=request_body['id'])
-        except Budget.DoesNotExist:
-            return Response({"message": f"Budget with ID {request_body['id']} does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+        budget = Budget.objects.get(id=request_body['id'])
 
         if request.method == 'DELETE':
             budget = Budget.objects.get(id=request_body['id'])
@@ -139,12 +135,8 @@ def budget(request):
                                 budget.add_limit(Category.objects.get(
                                     id=detail['category_id']), detail['limit'])
                         elif 'value' in detail:
-                            try:
-                                if detail['value'] > 0:
-                                    budget.add_future_expense(Category.objects.get(
-                                        id=detail['category_id']), detail['value'], detail['name'], detail['expiration_date'])
-                            except ValidationError as validation_error:
-                                return Response({"message": f"{validation_error}"}, status=status.HTTP_400_BAD_REQUEST)
+                            if detail['value'] > 0:
+                                budget.add_future_expense(Category.objects.get(id=detail['category_id']), detail['value'], detail['name'], detail['expiration_date'])
                         else:
                             return Response({"message": f"Request should include in details field limit and value for limit or future expense detail respectively"}, status=status.HTTP_400_BAD_REQUEST)
                 except Exception as e:

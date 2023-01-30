@@ -75,7 +75,6 @@ class TestBudgetsView(APITestCase):
 
         return response
 
-
     def test_create_one_budget_with_one_limit_detail_for_user(self):
         self.create_a_budget_with_response('2023-05-01', '2024-06-01', [{
             'category_id': 1,
@@ -238,6 +237,14 @@ class TestBudgetsView(APITestCase):
         self.assertEqual(response['details'][0]['limit'], 1000.00)
         self.assertEqual(response['details'][1]['category']['id'], 3)
         self.assertEqual(response['details'][1]['limit'], 2000.00)
+
+    def test_user_creates_an_budget_with_limit_id_that_does_not_exist(self):
+        self.create_a_budget_with_response('2020-02-01', '2050-02-01', [
+            {
+                'category_id': 310,
+                'limit': 1500
+            }
+        ], status.HTTP_400_BAD_REQUEST)
 
     def test_user_creates_an_active_budget_and_then_he_tries_to_modify_it_but_fails(self):
         self.create_a_budget_with_response('2020-02-01', '2050-02-01', [
