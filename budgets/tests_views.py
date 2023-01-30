@@ -64,6 +64,18 @@ class TestBudgetsView(APITestCase):
 
         return response
 
+    def make_future_expense_in_budget_with_response(self, future_expense_id, expense_done_date, expected_status_code):
+        response = self.client.patch(
+            self.endpoint + '/expended', {
+                'future_expense_id': future_expense_id,
+                'expense_done_date': expense_done_date
+        }, format='json')
+
+        self.assertEqual(response.status_code, expected_status_code)
+
+        return response
+
+
     def test_create_one_budget_with_one_limit_detail_for_user(self):
         self.create_a_budget_with_response('2023-05-01', '2024-06-01', [{
             'category_id': 1,
@@ -98,6 +110,33 @@ class TestBudgetsView(APITestCase):
                 'name': 'AySa Bill'
             }
         ], status.HTTP_400_BAD_REQUEST)
+
+    def test_create_one_budget_with_one_future_expense_and_user_execute_payment(self):
+        self.create_a_budget_with_response('2022-01-01', '2024-06-01', [
+            {
+                'category_id': 1,
+                'value': 5000,
+                'expiration_date': '2023-12-05',
+                'name': 'AySa Bill'
+            }
+        ], status.HTTP_201_CREATED)
+
+        self.make_future_expense_in_budget_with_response(1, '2023-01-12', status.HTTP_200_OK)
+
+    def test_user_execute_payment_but_has_no_current_budget(self):
+        self.make_future_expense_in_budget_with_response(1, '2023-01-12', status.HTTP_400_BAD_REQUEST)
+
+    def test_create_one_budget_but_execute_an_inexistent_detail(self):
+        self.create_a_budget_with_response('2022-01-01', '2024-06-01', [
+            {
+                'category_id': 1,
+                'value': 5000,
+                'expiration_date': '2023-12-05',
+                'name': 'AySa Bill'
+            }
+        ], status.HTTP_201_CREATED)
+
+        self.make_future_expense_in_budget_with_response(15, '2023-01-12', status.HTTP_400_BAD_REQUEST)
 
     def test_create_one_budget_with_details_for_user_and_he_retrieve_it(self):
         self.create_a_budget_with_response('2023-05-01', '2024-06-01', [

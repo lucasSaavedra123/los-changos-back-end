@@ -179,7 +179,7 @@ def make_future_expense(request):
         current_user_budget = Budget.current_budget_of(request.META['user'])
 
         if current_user_budget is None:
-            return JsonResponse({"message": f"User has no current budget"}, safe=False)
+            return JsonResponse({"message": f"User has no current budget"}, safe=False, status=status.HTTP_400_BAD_REQUEST)
         else:
             for detail in Detail.from_budget(current_user_budget):
                 if detail.id == request.META['body']['future_expense_id'] and detail.__class__ == FutureExpenseDetail:
@@ -197,4 +197,4 @@ def make_future_expense(request):
 
                     return JsonResponse({"message": f"Future Expense created"}, safe=False)
 
-            return JsonResponse({"message": f"Future Expense with ID {request.META['body']['future_expense_id']} does not exist"}, safe=False)
+            return JsonResponse({"message": f"Future Expense with ID {request.META['body']['future_expense_id']} does not exist"}, safe=False, status=status.HTTP_400_BAD_REQUEST)
