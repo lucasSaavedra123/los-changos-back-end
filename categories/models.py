@@ -70,12 +70,12 @@ class Category(models.Model):
         user_categories = Category.categories_from_user(self.user)
 
         if not update:
-            for category in user_categories:
-                if category.name == self.name:
-                    raise ValidationError(
-                        "User cannot create another repeated category")
+            categories_with_new_category_name = [category for category in user_categories if category.name == self.name]
+
+            if len(categories_with_new_category_name) != 0:
+                raise ValidationError(
+                    "User cannot create another repeated category")
 
         self.color = create_random_color_string()
-
         self.full_clean()
         super(Category, self).save(*args, **kwargs)

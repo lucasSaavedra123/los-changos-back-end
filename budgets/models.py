@@ -27,8 +27,7 @@ class Budget(models.Model):
     )
 
     initial_date = models.DateField(validators=[])
-    #final_date = models.DateField(validators=[validate_date_is_not_in_the_past])
-    final_date = models.DateField()
+    final_date = models.DateField(validators=[validate_date_is_not_in_the_past])
 
     @classmethod
     def all_from_user(cls, user):
@@ -46,11 +45,7 @@ class Budget(models.Model):
     @property
     def total_limit(self):
         details = LimitDetail.objects.filter(assigned_budget=self)
-        total = 0
-
-        for detail in details:
-            total += detail.limit
-
+        total = sum([detail.limit for detail in details])
         return total
 
     @property
@@ -68,17 +63,13 @@ class Budget(models.Model):
 
     @property
     def total_spent(self):
-        total = 0
-
-        for detail in LimitDetail.objects.filter(assigned_budget=self):
-            total += detail.total_spent
-
+        total = sum([detail.total_spent for detail in LimitDetail.objects.filter(assigned_budget=self)])
         return total
 
     @property
     def editable(self):
         return not self.active and not self.has_began
-    
+
     @property
     def has_began(self):
         return self.initial_date < date.today()
@@ -168,10 +159,7 @@ class LimitDetail(Detail):
             category=self.category
         )
 
-        total = 0
-
-        for expense in expenses:
-            total += expense.value
+        total = sum([expense.value for expense in expenses])
 
         return total
 
