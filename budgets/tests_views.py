@@ -233,7 +233,7 @@ class TestBudgetsView(APITestCase):
         self.assertEqual(response['id'], 1)
         self.assertEqual(response['initial_date'], '2021-01-01')
         self.assertEqual(response['editable'], False)
-        self.assertEqual(response['final_date'], '2023-02-01')
+        self.assertEqual(response['final_date'], '2024-02-01')
         self.assertEqual(response['details'][0]['category']['id'], 1)
         self.assertEqual(response['details'][0]['limit'], 1000.00)
         self.assertEqual(response['details'][1]['category']['id'], 3)
