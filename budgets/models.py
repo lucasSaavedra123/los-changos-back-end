@@ -86,9 +86,6 @@ class Budget(models.Model):
         if self.final_date < self.initial_date:
             raise ValidationError("Budget initial date should be earlier than final date.")
 
-        if self.final_date < date.today():
-            raise ValidationError("Budget date cannot be in the past.")
-
         for budget in Budget.all_from_user(self.user):
             if not (update and budget.id == self.id):
                 if (budget.initial_date <= self.final_date <= budget.final_date or budget.initial_date <= self.initial_date <= budget.final_date):
