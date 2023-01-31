@@ -13,6 +13,8 @@ from budgets.models import Budget, Detail, FutureExpenseDetail, LimitDetail
 from categories.models import Category
 from django.core.exceptions import ValidationError
 
+from drf_yasg.utils import swagger_auto_schema
+
 # Create your views here.
 def exist_budget_validation(budget_id):
     try:
@@ -20,7 +22,7 @@ def exist_budget_validation(budget_id):
     except Budget.DoesNotExist:
         raise serializers.ValidationError(f"Budget {budget_id} doesn't exist")
 
-class PostOrPatchBudgetSerializer(serializers.ModelSerializer):
+class PostBudgetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Budget
         fields = ['initial_date', 'final_date']
@@ -28,13 +30,20 @@ class PostOrPatchBudgetSerializer(serializers.ModelSerializer):
     initial_date = serializers.DateField(required=True)
     final_date = serializers.DateField(required=True)
 
-class PatchOrDeleteBudgetSerializer(serializers.ModelSerializer):
+class PatchBudgetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Budget
         fields = ['id', 'initial_date', 'final_date']
 
-    initial_date = serializers.DateField(required=False)
-    final_date = serializers.DateField(required=False)
+    initial_date = serializers.DateField(required=True)
+    final_date = serializers.DateField(required=True)
+    id = serializers.IntegerField(required=True, validators=[exist_budget_validation])
+
+class DeleteBudgetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Budget
+        fields = ['id']
+
     id = serializers.IntegerField(required=True, validators=[exist_budget_validation])
 
 class GetBudgetSerializer(serializers.ModelSerializer):
@@ -42,20 +51,24 @@ class GetBudgetSerializer(serializers.ModelSerializer):
         model = Budget
         fields = []
 
+@swagger_auto_schema(method='post', request_body=PostBudgetSerializer)
+@swagger_auto_schema(method='patch', request_body=PatchBudgetSerializer)
+@swagger_auto_schema(method='delete', request_body=DeleteBudgetSerializer)
 @api_view(['GET', 'POST', 'PATCH', 'DELETE'])
 def budget(request):
     request_body = request.META['body']
 
     serializers = {
-        'POST': [PostOrPatchBudgetSerializer(data=request_body)],
-        'PATCH': [PatchOrDeleteBudgetSerializer(data=request_body), PostOrPatchBudgetSerializer(data=request_body)],
-        'GET': [GetBudgetSerializer(data=request_body)],
-        'DELETE': [PatchOrDeleteBudgetSerializer(data=request_body)],
+        'POST': PostBudgetSerializer(data=request_body),
+        'PATCH': PatchBudgetSerializer(data=request_body),
+        'GET': GetBudgetSerializer(data=request_body),
+        'DELETE': DeleteBudgetSerializer(data=request_body),
     }
 
-    for serializer in serializers[request.method]:
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer = serializers[request.method]
+
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     #The following validations cannot be included in Django's serializers
     if request.method == 'POST' or request.method == 'PATCH':
@@ -162,9 +175,20 @@ def current_budget(request):
         else:
             return JsonResponse(current_user_budget.as_dict, safe=False)
 
+class MakeFutureExpenseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Budget
+        fields = ['future_expense_id', 'expense_done_date']
 
+    future_expense_id = serializers.IntegerField(required=True)
+    expense_done_date = serializers.DateField(required=True)
+
+@swagger_auto_schema(method='patch', request_body=MakeFutureExpenseSerializer)
 @api_view(['PATCH'])
 def make_future_expense(request):
+    
+    serializer = MakeFutureExpenseSerializer(data=request.META['body'])
+
     if request.method == 'PATCH':
         current_user_budget = Budget.current_budget_of(request.META['user'])
 

@@ -8,13 +8,15 @@ from rest_framework import status, serializers
 
 from categories.models import Category
 
+from drf_yasg.utils import swagger_auto_schema
+
 def exist_category_validation(category_id):
     try:
         Category.objects.get(id=category_id)
     except Category.DoesNotExist:
         raise serializers.ValidationError(f"Category {category_id} doesn't exist")
 
-class PostOrPatchExpenseSerializer(serializers.ModelSerializer):
+class PostCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['name', 'material_ui_icon_name']
@@ -22,35 +24,46 @@ class PostOrPatchExpenseSerializer(serializers.ModelSerializer):
     material_ui_icon_name = serializers.CharField(required=True)
     name = serializers.CharField(required=True)
 
-class PatchOrDeleteExpenseSerializer(serializers.ModelSerializer):
+class PatchCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['id', 'name', 'material_ui_icon_name']
 
-    material_ui_icon_name = serializers.CharField(required=False)
-    name = serializers.CharField(required=False)
+    material_ui_icon_name = serializers.CharField(required=True)
+    name = serializers.CharField(required=True)
     id = serializers.IntegerField(required=True, validators=[exist_category_validation])
 
-class GetExpenseSerializer(serializers.ModelSerializer):
+class DeleteCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id']
+
+    id = serializers.IntegerField(required=True, validators=[exist_category_validation])
+
+class GetCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = []
 
 # Create your views here.
+@swagger_auto_schema(method='post', request_body=PostCategorySerializer)
+@swagger_auto_schema(method='patch', request_body=PatchCategorySerializer)
+@swagger_auto_schema(method='delete', request_body=DeleteCategorySerializer)
 @api_view(['GET', 'POST', 'PATCH', 'DELETE'])
 def category(request):
     request_body = request.META['body']
 
     serializers = {
-        'POST': [PostOrPatchExpenseSerializer(data=request_body)],
-        'PATCH': [PatchOrDeleteExpenseSerializer(data=request_body), PostOrPatchExpenseSerializer(data=request_body)],
-        'GET': [GetExpenseSerializer(data=request_body)],
-        'DELETE': [PatchOrDeleteExpenseSerializer(data=request_body)],
+        'POST': PostCategorySerializer(data=request_body),
+        'PATCH': PatchCategorySerializer(data=request_body),
+        'GET': GetCategorySerializer(data=request_body),
+        'DELETE': DeleteCategorySerializer(data=request_body)
     }
 
-    for serializer in serializers[request.method]:
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer = serializers[request.method]
+
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     if request.method == 'GET':
         user_categories = Category.categories_from_user(request.META['user'])

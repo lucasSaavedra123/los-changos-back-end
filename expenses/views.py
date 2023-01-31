@@ -10,6 +10,8 @@ from rest_framework.response import Response
 from rest_framework import status, serializers
 from categories.models import Category
 
+from drf_yasg.utils import swagger_auto_schema
+
 from .models import Expense
 
 
@@ -32,7 +34,7 @@ def exist_category_validation(category_id):
     except Category.DoesNotExist:
         raise serializers.ValidationError(f"Category {category_id} doesn't exist")
 
-class PostOrPatchExpenseSerializer(serializers.ModelSerializer):
+class PostExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expense
         fields = ['name', 'value', 'category_id', 'date']
@@ -42,15 +44,22 @@ class PostOrPatchExpenseSerializer(serializers.ModelSerializer):
     category_id = serializers.IntegerField(required=True, validators=[exist_category_validation])
     date = serializers.DateField(validators=[is_on_the_future_validation], required=True)
 
-class PatchOrDeleteExpenseSerializer(serializers.ModelSerializer):
+class PatchExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expense
         fields = ['id', 'name', 'value', 'category_id', 'date']
 
-    name = serializers.CharField(required=False)
-    value = serializers.FloatField(required=False)
-    category_id = serializers.IntegerField(required=False, validators=[exist_category_validation])
-    date = serializers.DateField(required=False, validators=[is_on_the_future_validation])
+    id = serializers.IntegerField(required=True)
+    name = serializers.CharField(required=True)
+    value = serializers.FloatField(required=True)
+    category_id = serializers.IntegerField(required=True, validators=[exist_category_validation])
+    date = serializers.DateField(validators=[is_on_the_future_validation], required=True)
+
+class DeleteExpenseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Expense
+        fields = ['id']
+
     id = serializers.IntegerField(required=True, validators=[exist_expense_validation])
 
 class GetExpenseSerializer(serializers.ModelSerializer):
@@ -59,20 +68,25 @@ class GetExpenseSerializer(serializers.ModelSerializer):
         fields = []
 
 # Create your views here.
+#@swagger_auto_schema(method='get', request_body=GetExpenseSerializer)
+@swagger_auto_schema(method='post', request_body=PostExpenseSerializer)
+@swagger_auto_schema(method='patch', request_body=PatchExpenseSerializer)
+@swagger_auto_schema(method='delete', request_body=DeleteExpenseSerializer)
 @api_view(['GET', 'POST', 'DELETE', 'PATCH'])
 def expense(request):
     request_body = request.META['body']
 
     serializers = {
-        'POST': [PostOrPatchExpenseSerializer(data=request_body)],
-        'PATCH': [PatchOrDeleteExpenseSerializer(data=request_body), PostOrPatchExpenseSerializer(data=request_body)],
-        'GET': [GetExpenseSerializer(data=request_body)],
-        'DELETE': [PatchOrDeleteExpenseSerializer(data=request_body)],
+        'POST': PostExpenseSerializer(data=request_body),
+        'PATCH': PatchExpenseSerializer(data=request_body),
+        'GET': GetExpenseSerializer(data=request_body),
+        'DELETE': DeleteExpenseSerializer(data=request_body),
     }
 
-    for serializer in serializers[request.method]:
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer = serializers[request.method]
+
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     if request.method == 'GET':
         user_expenses = Expense.expenses_from_user(request.META['user'])
@@ -128,7 +142,7 @@ class PostFilterExpenseSerializer(serializers.ModelSerializer):
 
     timeline = serializers.ListField(required=True, child=serializers.DateField(), validators=[is_on_the_future_validation])
 
-
+@swagger_auto_schema(method='post', request_body=PostFilterExpenseSerializer)
 @api_view(['POST'])
 def expense_filter(request):
     request_body = request.META['body']
