@@ -225,6 +225,44 @@ class TestBudgetsView(APITestCase):
             }
         ], status.HTTP_400_BAD_REQUEST)
 
+    def test_user_cannot_create_or_update_a_budget_with_dates_unsorted(self):
+        self.create_a_budget_with_response('2050-02-01', '2030-02-01', [
+            {
+                'category_id': 3,
+                'limit': 1500
+            },
+            {
+                'category_id': 2,
+                'limit': 5000
+            }
+        ], status.HTTP_400_BAD_REQUEST)
+
+
+        self.create_a_budget_with_response('2030-02-01', '2050-02-01', [
+            {
+                'category_id': 3,
+                'limit': 1500
+            },
+            {
+                'category_id': 2,
+                'limit': 5000
+            }
+        ], status.HTTP_201_CREATED)
+
+
+        self.patch_a_budget_with_response(1, '2050-02-01', '2030-02-01', [
+            {
+                'category_id': 1,
+                'limit': 1000
+            },
+            {
+                'category_id': 3,
+                'value': 1200,
+                'name': 'AySa Bill',
+                'expiration_date': '2023-12-05'
+            }
+        ], status.HTTP_400_BAD_REQUEST)
+
     def test_user_creates_a_budget_and_then_he_modifies_it_but_forgots_future_expense_name_field(self):
         self.create_a_budget_with_response('2030-02-01', '2050-02-01', [
             {
