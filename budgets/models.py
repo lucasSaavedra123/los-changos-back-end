@@ -44,12 +44,8 @@ class Budget(models.Model):
 
     @property
     def total_limit(self):
-        details = Detail.objects.filter(assigned_budget=self)
-        total = 0
-
-        for detail in details:
-            total += detail.limit
-
+        details = LimitDetail.objects.filter(assigned_budget=self)
+        total = sum([detail.limit for detail in details])
         return total
 
     @property
@@ -67,23 +63,22 @@ class Budget(models.Model):
 
     @property
     def total_spent(self):
-        total = 0
-
-        for detail in Detail.objects.filter(assigned_budget=self):
-            total += detail.total_spent
-
+        total = sum([detail.total_spent for detail in LimitDetail.objects.filter(assigned_budget=self)])
         return total
 
     @property
     def editable(self):
         return not self.active and not self.has_began
-    
+
     @property
     def has_began(self):
         return self.initial_date < date.today()
 
-    def add_detail(self, category, limit):
-        return Detail.objects.create(category=category, limit=limit, assigned_budget=self)
+    def add_limit(self, category, limit):
+        return LimitDetail.objects.create(category=category, value=limit, assigned_budget=self)
+
+    def add_future_expense(self, category, value, name, expiration_date):
+        return FutureExpenseDetail.objects.create(category=category, value=value, assigned_budget=self, expiration_date=expiration_date, name=name)
 
     def save(self, *args, update=False, **kwargs):
         self.full_clean()
@@ -104,9 +99,7 @@ class Budget(models.Model):
 
 class Detail(models.Model):
     class Meta:
-        constraints = [models.UniqueConstraint(fields=['assigned_budget', 'category'], name='category repetition is not available')]
-
-    id = models.AutoField(primary_key=True)   
+        abstract = True
 
     category = models.ForeignKey(
         Category,
@@ -117,12 +110,6 @@ class Detail(models.Model):
         editable=True
     )
 
-    limit = models.DecimalField(
-        max_digits=11,
-        decimal_places=2,
-        default=0.01,
-        validators=[MinValueValidator(0.01)])  # Up to $100,000,000
-    
     assigned_budget = models.ForeignKey(
         Budget,
         on_delete=models.CASCADE,
@@ -132,9 +119,21 @@ class Detail(models.Model):
         editable=True
     )
 
+    id = models.AutoField(primary_key=True)   
+
+    value = models.DecimalField(
+        max_digits=11,
+        decimal_places=2,
+        default=0.01,
+        validators=[MinValueValidator(0.01)])  # Up to $100,000,000
+
     @classmethod
     def from_budget(cls, budget):
-        return cls.objects.filter(assigned_budget=budget)
+        return list(LimitDetail.objects.filter(assigned_budget=budget)) + list(FutureExpenseDetail.objects.filter(assigned_budget=budget))
+
+class LimitDetail(Detail):
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['assigned_budget', 'category'], name='category repetition in limit detail is not allowed')]
 
     @property
     def as_dict(self):
@@ -143,6 +142,10 @@ class Detail(models.Model):
             'limit': float(self.limit),
             'spent': float(self.total_spent)
         }
+    
+    @property
+    def limit(self):
+        return self.value
 
     @property
     def total_spent(self):
@@ -153,9 +156,33 @@ class Detail(models.Model):
             category=self.category
         )
 
-        total = 0
-
-        for expense in expenses:
-            total += expense.value
+        total = sum([expense.value for expense in expenses])
 
         return total
+
+class FutureExpenseDetail(Detail):
+    name = models.CharField(max_length=50, null=True)
+    expiration_date = models.DateField(validators=[], null=True)
+    expended = models.BooleanField(default=False)
+
+    @property
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'category': self.category.as_dict,
+            'value': float(self.value),
+            'name': self.name,
+            'expended': self.expended,
+            'expiration_date': self.expiration_date
+        }
+
+    def should_be_notified(self):
+        return (self.expiration_date - date.today()).days == 3 and not self.expended
+    
+    def save(self, *args, update=False, **kwargs):
+        self.full_clean()
+
+        if not (self.assigned_budget.initial_date <= self.expiration_date <= self.assigned_budget.final_date):
+            raise ValidationError("Future Expense has to be between the budget dates.")
+
+        super(FutureExpenseDetail, self).save(*args, **kwargs)

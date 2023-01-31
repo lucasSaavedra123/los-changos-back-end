@@ -14,7 +14,7 @@ import os
 from pathlib import Path
 import firebase_admin
 import json
-
+from walletify import scheduler
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -170,3 +170,10 @@ with open('firebase-config.json', 'w') as file:
 FIREBASE_CONFIG = os.path.join(BASE_DIR, 'firebase-config.json')
 FIREBASE_CREDS = firebase_admin.credentials.Certificate(FIREBASE_CONFIG)
 FIREBASE_APP = firebase_admin.initialize_app(FIREBASE_CREDS)
+
+EMAIL_HOST = os.environ.get('MAILTRAP_EMAIL_HOST')
+EMAIL_HOST_USER = os.environ.get('MAILTRAP_EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('MAILTRAP_EMAIL_HOST_PASSWORD')
+EMAIL_PORT = os.environ.get('MAILTRAP_EMAIL_PORT')
+
+scheduler.start()
