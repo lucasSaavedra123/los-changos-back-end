@@ -10,6 +10,8 @@ from rest_framework.response import Response
 from rest_framework import status, serializers
 from categories.models import Category
 
+from drf_yasg.utils import swagger_auto_schema
+
 from .models import Expense
 
 
@@ -59,6 +61,10 @@ class GetExpenseSerializer(serializers.ModelSerializer):
         fields = []
 
 # Create your views here.
+#@swagger_auto_schema(method='get', request_body=GetExpenseSerializer)
+@swagger_auto_schema(method='post', request_body=PostOrPatchExpenseSerializer)
+@swagger_auto_schema(method='patch', request_body=PostOrPatchExpenseSerializer)
+@swagger_auto_schema(method='delete', request_body=PatchOrDeleteExpenseSerializer)
 @api_view(['GET', 'POST', 'DELETE', 'PATCH'])
 def expense(request):
     request_body = request.META['body']
@@ -128,7 +134,7 @@ class PostFilterExpenseSerializer(serializers.ModelSerializer):
 
     timeline = serializers.ListField(required=True, child=serializers.DateField(), validators=[is_on_the_future_validation])
 
-
+@swagger_auto_schema(method='post', request_body=PostFilterExpenseSerializer)
 @api_view(['POST'])
 def expense_filter(request):
     request_body = request.META['body']

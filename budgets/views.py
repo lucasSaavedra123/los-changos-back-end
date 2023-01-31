@@ -13,6 +13,8 @@ from budgets.models import Budget, Detail, FutureExpenseDetail, LimitDetail
 from categories.models import Category
 from django.core.exceptions import ValidationError
 
+from drf_yasg.utils import swagger_auto_schema
+
 # Create your views here.
 def exist_budget_validation(budget_id):
     try:
@@ -42,6 +44,9 @@ class GetBudgetSerializer(serializers.ModelSerializer):
         model = Budget
         fields = []
 
+@swagger_auto_schema(method='post', request_body=PostOrPatchBudgetSerializer)
+@swagger_auto_schema(method='patch', request_body=PatchOrDeleteBudgetSerializer)
+@swagger_auto_schema(method='delete', request_body=PatchOrDeleteBudgetSerializer)
 @api_view(['GET', 'POST', 'PATCH', 'DELETE'])
 def budget(request):
     request_body = request.META['body']
@@ -162,9 +167,22 @@ def current_budget(request):
         else:
             return JsonResponse(current_user_budget.as_dict, safe=False)
 
+class MakeFutureExpenseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Budget
+        fields = ['future_expense_id']
 
+    future_expense_id = serializers.IntegerField(required=True)
+
+@swagger_auto_schema(method='patch', request_body=MakeFutureExpenseSerializer)
 @api_view(['PATCH'])
 def make_future_expense(request):
+    
+    serializer = MakeFutureExpenseSerializer(data=request.META['body'])
+
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     if request.method == 'PATCH':
         current_user_budget = Budget.current_budget_of(request.META['user'])
 
