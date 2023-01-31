@@ -7,6 +7,8 @@ def notify_expiration_expenses():
     from budgets.models import Budget
     from users.models import User
 
+    print("Info: Users are notified...")
+
     for user in User.objects.all():
 
         current_budget = Budget.current_budget_of(user)
