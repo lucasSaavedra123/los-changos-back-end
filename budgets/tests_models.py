@@ -13,6 +13,8 @@ from budgets.models import Budget
 from django.db.utils import IntegrityError
 from expenses.models import Expense
 
+from datetime import datetime, timedelta
+
 # Create your tests here.
 class TestBudgetsModel(TestCase):
 
@@ -156,3 +158,22 @@ class TestBudgetsModel(TestCase):
 
         with self.assertRaisesMessage(ValidationError, "Future Expense has to be between the budget dates."):
             new_budget.add_future_expense(Category.objects.all()[4], 4500, 'AySa Bill', '2028-01-01')
+
+    def test_future_expense_should_be_notified(self):
+        new_budget = Budget.objects.create(user=self.a_user, initial_date='2020-01-01', final_date='2025-01-01')
+
+        detail = new_budget.add_future_expense(Category.objects.all()[4], 4500, 'AySa Bill', (datetime.today().date() + timedelta(days=3)).strftime('%Y-%m-%d'))
+
+        self.assertTrue(detail.should_be_notified())
+
+    def test_future_expense_should_not_be_notified(self):
+        new_budget = Budget.objects.create(user=self.a_user, initial_date='2020-01-01', final_date='2025-01-01')
+
+        detail = new_budget.add_future_expense(Category.objects.all()[4], 4500, 'AySa Bill', (datetime.today().date() + timedelta(days=0)).strftime('%Y-%m-%d'))
+        self.assertFalse(detail.should_be_notified())
+
+        detail = new_budget.add_future_expense(Category.objects.all()[4], 4500, 'AySa Bill', (datetime.today().date() - timedelta(days=3)).strftime('%Y-%m-%d'))
+        self.assertFalse(detail.should_be_notified())
+
+        detail = new_budget.add_future_expense(Category.objects.all()[4], 4500, 'AySa Bill', (datetime.today().date() + timedelta(days=4)).strftime('%Y-%m-%d'))
+        self.assertFalse(detail.should_be_notified())
