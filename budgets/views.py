@@ -178,18 +178,16 @@ def current_budget(request):
 class MakeFutureExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Budget
-        fields = ['future_expense_id']
+        fields = ['future_expense_id', 'expense_done_date']
 
     future_expense_id = serializers.IntegerField(required=True)
+    expense_done_date = serializers.DateField(required=True)
 
 @swagger_auto_schema(method='patch', request_body=MakeFutureExpenseSerializer)
 @api_view(['PATCH'])
 def make_future_expense(request):
     
     serializer = MakeFutureExpenseSerializer(data=request.META['body'])
-
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     if request.method == 'PATCH':
         current_user_budget = Budget.current_budget_of(request.META['user'])
