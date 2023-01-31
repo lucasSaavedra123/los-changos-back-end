@@ -1,2 +1,2 @@
 [report]
-omit = */migrations/*, */wsgi.py, */asgi.py, manage.py, walletify/settings.py, walletify/middleware.py, walletify/task.py, walletify/apps.py
+omit = */migrations/*, */wsgi.py, */asgi.py, manage.py, walletify/settings.py, walletify/middleware.py, walletify/tasks.py, walletify/apps.py
