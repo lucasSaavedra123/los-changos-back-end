@@ -123,11 +123,12 @@ def budget(request):
             if budget.active:
                 return Response({"message": f"Current budgets are neither editable and removable"}, status=status.HTTP_400_BAD_REQUEST)
             else:
+                budget.initial_date = datetime.strptime(request_body['initial_date'], '%Y-%m-%d').date()
+                budget.final_date = datetime.strptime(request_body['final_date'], '%Y-%m-%d').date()
                 current_details = LimitDetail.from_budget(budget)
 
                 for detail in current_details:
                     detail.delete()
-
                 try:
                     for detail in request_body['details']:
                         if 'limit' in detail:
@@ -145,8 +146,6 @@ def budget(request):
                         detail.save()
                     return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 
-                budget.initial_date = request_body['initial_date']
-                budget.final_date = request_body['final_date']
                 budget.save(update=True)
 
             return Response(None, status=status.HTTP_200_OK)

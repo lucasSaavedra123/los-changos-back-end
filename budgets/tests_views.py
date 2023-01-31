@@ -202,7 +202,6 @@ class TestBudgetsView(APITestCase):
         self.assertEqual(len(first_budget['details']), 5)
 
     def test_user_creates_a_budget_and_then_he_modifies_it(self):
-
         self.create_a_budget_with_response('2030-02-01', '2050-02-01', [
             {
                 'category_id': 3,
@@ -214,14 +213,16 @@ class TestBudgetsView(APITestCase):
             }
         ], status.HTTP_201_CREATED)
 
-        self.patch_a_budget_with_response(1, '2021-01-01', '2023-02-01', [
+        response = self.patch_a_budget_with_response(1, '2021-01-01', '2024-02-01', [
             {
                 'category_id': 1,
                 'limit': 1000
             },
             {
                 'category_id': 3,
-                'limit': 2000
+                'value': 2000,
+                'name': 'AySa Bill',
+                'expiration_date': '2023-12-05'
             }
         ], status.HTTP_200_OK)
 
@@ -236,7 +237,7 @@ class TestBudgetsView(APITestCase):
         self.assertEqual(response['details'][0]['category']['id'], 1)
         self.assertEqual(response['details'][0]['limit'], 1000.00)
         self.assertEqual(response['details'][1]['category']['id'], 3)
-        self.assertEqual(response['details'][1]['limit'], 2000.00)
+        self.assertEqual(response['details'][1]['value'], 2000.00)
 
     def test_user_creates_an_budget_with_limit_id_that_does_not_exist(self):
         self.create_a_budget_with_response('2020-02-01', '2050-02-01', [
