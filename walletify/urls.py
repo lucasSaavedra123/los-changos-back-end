@@ -23,7 +23,7 @@ schema_view = get_schema_view(
    openapi.Info(
       title="Walletify API",
       default_version='v1',
-      description="Walletify API Docs",
+      description="Walletify API Docs. Endpoints require a valid Bearer JWT token in the Authorization header.",
    ),
    public=True,
    #permission_classes=[permissions.AllowAny],
