@@ -17,24 +17,25 @@ class CustomFirebaseAuthentication:
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        if os.environ.get('ENVIRONMENT') == "DEV":
-            request.META['uid'] = 'randomrandomrandomrandomrand'
-            request.META['email'] = 'random@random.com'
-        else:
-            try:
-                authorization_header = request.META.get('HTTP_AUTHORIZATION')
-                token = authorization_header.replace("Bearer ", "")
-                decoded_token = auth.verify_id_token(token)
-                request.META['uid'] = decoded_token['user_id']
-                request.META['email'] = decoded_token['email']
-            except KeyError:
-                return JsonResponse({"message": "A valid token was not provided"}, status=401)
-            except AttributeError:
-                return JsonResponse({"message": "A valid token was not provided"}, status=401)
-            except ExpiredIdTokenError:
-                return JsonResponse({"message": "A valid token was not provided"}, status=401)
-            except InvalidIdTokenError:
-                return JsonResponse({"message": "A valid token was not provided"}, status=401)
+        if not (request.path.startswith('/docs') or request.path.startswith('/redocs')):
+            if os.environ.get('ENVIRONMENT') == "DEV":
+                request.META['uid'] = 'randomrandomrandomrandomrand'
+                request.META['email'] = 'random@random.com'
+            else:
+                try:
+                    authorization_header = request.META.get('HTTP_AUTHORIZATION')
+                    token = authorization_header.replace("Bearer ", "")
+                    decoded_token = auth.verify_id_token(token)
+                    request.META['uid'] = decoded_token['user_id']
+                    request.META['email'] = decoded_token['email']
+                except KeyError:
+                    return JsonResponse({"message": "A valid token was not provided"}, status=401)
+                except AttributeError:
+                    return JsonResponse({"message": "A valid token was not provided"}, status=401)
+                except ExpiredIdTokenError:
+                    return JsonResponse({"message": "A valid token was not provided"}, status=401)
+                except InvalidIdTokenError:
+                    return JsonResponse({"message": "A valid token was not provided"}, status=401)
 
         return None
 
