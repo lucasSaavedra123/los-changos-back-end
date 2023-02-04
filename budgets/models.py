@@ -95,7 +95,7 @@ class Budget(models.Model):
 
     @property
     def active(self):
-        return self.initial_date < date.today() < self.final_date
+        return self.initial_date <= date.today() <= self.final_date
 
 class Detail(models.Model):
     class Meta:
