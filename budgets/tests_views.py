@@ -182,7 +182,7 @@ class TestBudgetsView(APITestCase):
             }
         ], status.HTTP_201_CREATED)
 
-        self.create_a_budget_with_response('2023-01-01', '2023-02-01', [
+        self.create_a_budget_with_response('2023-01-01', '2023-10-01', [
             {
                 'category_id': 3,
                 'limit': 1500
@@ -477,7 +477,7 @@ class TestBudgetsView(APITestCase):
         self.assertActionInSecureEnvironment(action)
 
     def test_user_get_current_budget(self):
-        self.create_a_budget_with_response('2020-01-01', '2023-02-01', [
+        self.create_a_budget_with_response('2020-01-01', '2023-10-01', [
                 {
                     'category_id': 1,
                     'limit': 1000
@@ -496,7 +496,7 @@ class TestBudgetsView(APITestCase):
 
         self.assertEqual(response['id'], 1)
         self.assertEqual(response['initial_date'], '2020-01-01')
-        self.assertEqual(response['final_date'], '2023-02-01')
+        self.assertEqual(response['final_date'], '2023-10-01')
         self.assertEqual(response['details'][0]['category']['id'], 1)
         self.assertEqual(response['details'][0]['limit'], 1000.00)
         self.assertEqual(response['details'][1]['category']['id'], 3)
