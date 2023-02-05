@@ -247,7 +247,7 @@ class TestBudgetsView(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-    def test_creates_a_budget_with_a_detai_such_category_is_deleted(self):
+    def test_creates_a_budget_with_a_detail_such_category_is_deleted(self):
         User.objects.create(firebase_uid='randomrandomrandomrandomrand', email='random@random.com')
         new_category = Category.create_category_for_user(User.objects.all()[0], name='A Category', material_ui_icon_name='Home')
 
@@ -264,7 +264,7 @@ class TestBudgetsView(APITestCase):
 
         self.assertEqual(len(response.json()), 0)
 
-    def test_creates_a_budget_with_a_detai_such_category_is_deleted(self):
+    def test_current_budget_with_a_detail_such_category_is_deleted(self):
         User.objects.create(firebase_uid='randomrandomrandomrandomrand', email='random@random.com')
         new_category = Category.create_category_for_user(User.objects.all()[0], name='A Category', material_ui_icon_name='Home')
 
