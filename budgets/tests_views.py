@@ -273,6 +273,18 @@ class TestBudgetsView(APITestCase):
 
         self.assertEqual(len(first_budget['details']), 5)
 
+    def test_creates_two_budgets_with_different_details_but_limit_zero_is_ignored(self):
+        response = self.create_a_budget_with_response('2023-01-01', '2023-10-01', [
+            {
+                'category_id': 3,
+                'limit': 1500
+            },
+            {
+                'category_id': 1,
+                'limit': 0
+            }
+        ], status.HTTP_201_CREATED)
+
     def test_user_fails_to_create_empty_budget(self):
         self.create_a_budget_with_response('2030-02-01', '2050-02-01', [], status.HTTP_400_BAD_REQUEST)
 
@@ -399,6 +411,18 @@ class TestBudgetsView(APITestCase):
                 'value': 1200,
                 'name': 'AySa Bill',
                 'expiration_date': '2023-12-05'
+            }
+        ], status.HTTP_400_BAD_REQUEST)
+
+    def test_user_creates_a_budget_but_fails_with_repeated_limits(self):
+        self.create_a_budget_with_response('2030-02-01', '2050-02-01', [
+            {
+                'category_id': 3,
+                'limit': 1500
+            },
+            {
+                'category_id': 3,
+                'limit': 5000
             }
         ], status.HTTP_400_BAD_REQUEST)
 

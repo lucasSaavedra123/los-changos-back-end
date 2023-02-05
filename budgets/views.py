@@ -15,6 +15,53 @@ from django.core.exceptions import ValidationError
 
 from drf_yasg.utils import swagger_auto_schema
 
+
+def create_details(details, budget):
+    limit_dictionary = {}
+    value_dictionary = {}
+
+    if len(details) == 0:
+        raise Exception("Empty budgets cannot be created")
+
+    limit_details = [detail for detail in details if 'limit' in detail and detail != 0 ]
+
+    if len(limit_details) == 0:
+        raise Exception("A limit detail should be included")
+
+    for detail in details:
+        if 'limit' not in detail and 'value' not in detail:
+            raise Exception("Missing limit or value in detail")
+
+    for detail in details:
+        if 'limit' in detail:
+            if detail['limit'] > 0:
+                if detail['category_id'] in limit_dictionary:
+                    raise Exception(f"Category {detail['category_id']} cannot have more than one limit")
+                else:
+                    limit_dictionary[detail['category_id']] = detail['limit']
+
+                budget.add_limit(Category.objects.get(id=detail['category_id']), detail['limit'])
+            elif detail['limit'] == 0:
+                pass
+            else:
+                raise Exception(f"Limit cannot be less than 0")
+
+    for detail in details:
+        if 'value' in detail:
+            if detail['value'] > 0:
+                if detail['category_id'] in value_dictionary:
+                    value_dictionary[detail['category_id']] += detail['value']
+                else:
+                    value_dictionary[detail['category_id']] = detail['value']
+
+                budget.add_future_expense(Category.objects.get(id=detail['category_id']), detail['value'], detail['name'], detail['expiration_date'])
+            else:
+                raise Exception(f"Value cannot be less than 0")
+
+    for value_id in value_dictionary:
+        if value_dictionary[value_id] > limit_dictionary[value_id]:
+            raise Exception(f"Category {value_id} has future expenses greater than its limit")
+
 # Create your views here.
 def exist_budget_validation(budget_id):
     try:
@@ -97,45 +144,7 @@ def budget(request):
         )
 
         try:
-            limit_dictionary = {}
-            value_dictionary = {}
-
-            if len(request_body['details']) == 0:
-                return Response({"message": "Empty budgets cannot be created"}, status=status.HTTP_400_BAD_REQUEST)
-
-            for detail in request_body['details']:
-                if 'limit' not in detail and 'value' not in detail:
-                    return Response({"message": f"Missing limit or value in detail"}, status=status.HTTP_400_BAD_REQUEST)
-
-            for detail in request_body['details']:
-                if 'limit' in detail:
-                    if detail['limit'] > 0:
-                        if detail['category_id'] in limit_dictionary:
-                            return  Response({"message": f"Category {detail['category_id']} cannot have more than one limit"}, status=status.HTTP_400_BAD_REQUEST)
-                        else:
-                            limit_dictionary[detail['category_id']] = detail['limit']
-
-                        new_budget.add_limit(Category.objects.get(id=detail['category_id']), detail['limit'])
-                    else:
-                        return Response({"message": f"Limit cannot be less than 0"}, status=status.HTTP_400_BAD_REQUEST)
-
-            for detail in request_body['details']:
-                if 'value' in detail:
-                    if detail['value'] > 0:
-                        if detail['category_id'] in value_dictionary:
-                            value_dictionary[detail['category_id']] += detail['value']
-                        else:
-                            value_dictionary[detail['category_id']] = detail['value']
-
-                        new_budget.add_future_expense(Category.objects.get(id=detail['category_id']), detail['value'], detail['name'], detail['expiration_date'])
-                    else:
-                        return Response({"message": f"Limit cannot be less than 0"}, status=status.HTTP_400_BAD_REQUEST)
-
-            for value_id in value_dictionary:
-                if value_dictionary[value_id] > limit_dictionary[value_id]:
-                    new_budget.delete()
-                    return Response({"message": f"Category {value_id} has future expenses greater than its limit"}, status=status.HTTP_400_BAD_REQUEST)
-
+            create_details(request_body['details'], new_budget)
         except Exception as e:
             new_budget.delete()
             return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
@@ -170,47 +179,10 @@ def budget(request):
             budget.final_date = datetime.strptime(request_body['final_date'], '%Y-%m-%d').date()
             current_details = LimitDetail.from_budget(budget)
 
-            if len(request_body['details']) == 0:
-                return Response({"message": "Empty budgets cannot be created"}, status=status.HTTP_400_BAD_REQUEST)
-
             for detail in current_details:
                 detail.delete()
             try:
-                limit_dictionary = {}
-                value_dictionary = {}
-
-                for detail in request_body['details']:
-                    if 'limit' not in detail and 'value' not in detail:
-                        return Response({"message": f"Missing limit or value in detail"}, status=status.HTTP_400_BAD_REQUEST)
-
-                for detail in request_body['details']:
-                    if 'limit' in detail:
-                        if detail['limit'] > 0:
-                            if detail['category_id'] in limit_dictionary:
-                                return  Response({"message": f"Category {detail['category_id']} cannot have more than one limit"}, status=status.HTTP_400_BAD_REQUEST)
-                            else:
-                                limit_dictionary[detail['category_id']] = detail['limit']
-
-                            budget.add_limit(Category.objects.get(id=detail['category_id']), detail['limit'])
-                        else:
-                            return Response({"message": f"Limit cannot be less than 0"}, status=status.HTTP_400_BAD_REQUEST)
-
-                for detail in request_body['details']:
-                    if 'value' in detail:
-                        if detail['value'] > 0:
-                            if detail['category_id'] in value_dictionary:
-                                value_dictionary[detail['category_id']] += detail['value']
-                            else:
-                                value_dictionary[detail['category_id']] = detail['value']
-
-                            budget.add_future_expense(Category.objects.get(id=detail['category_id']), detail['value'], detail['name'], detail['expiration_date'])
-                        else:
-                            return Response({"message": f"Limit cannot be less than 0"}, status=status.HTTP_400_BAD_REQUEST)
-
-                for value_id in value_dictionary:
-                    if value_dictionary[value_id] > limit_dictionary[value_id]:
-                        budget.delete()
-                        return Response({"message": f"Category {value_id} has future expenses greater than its limit"}, status=status.HTTP_400_BAD_REQUEST)
+                create_details(request_body['details'], budget)
             except Exception as e:
                 #If something failed, we recover the previous state
                 for detail in Detail.from_budget(budget):
