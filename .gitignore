@@ -284,3 +284,4 @@ cython_debug/
 #Custom Things
 firebase-config.json
 walletify-env
+db.sqlite3
