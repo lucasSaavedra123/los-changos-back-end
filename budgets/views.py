@@ -131,8 +131,14 @@ def budget(request):
 
         # Front-End requires all limits with each category, even if it's 0
         for budget_index in range(len(budgets_as_dict)):
-            categories_that_have_limit_budgets = [ detail['category']['id'] for detail in budgets_as_dict[budget_index]['details'] if detail.get('limit', None) is not None ]
-            budgets_as_dict[budget_index]['details'] += [{ 'category': user_category.as_dict, 'limit': 0, 'spent': 0 } for user_category in all_categories_from_user if user_category.id not in categories_that_have_limit_budgets]
+            if len(budgets_as_dict[budget_index]['details']) == 0:
+                user_budgets[budget_index].delete()
+                budgets_as_dict[budget_index] = {}
+            else:
+                categories_that_have_limit_budgets = [ detail['category']['id'] for detail in budgets_as_dict[budget_index]['details'] if detail.get('limit', None) is not None ]
+                budgets_as_dict[budget_index]['details'] += [{ 'category': user_category.as_dict, 'limit': 0, 'spent': 0 } for user_category in all_categories_from_user if user_category.id not in categories_that_have_limit_budgets]
+
+        budgets_as_dict = [budget for budget in budgets_as_dict if budget != {}]
 
         return JsonResponse(budgets_as_dict, safe=False)
 
@@ -205,7 +211,11 @@ def current_budget(request):
         if current_user_budget is None:
             return JsonResponse({}, safe=False)
         else:
-            return JsonResponse(current_user_budget.as_dict, safe=False)
+            if len(current_user_budget.as_dict['details']) == 0:
+                current_user_budget.delete()
+                return JsonResponse({}, safe=False)
+            else:
+                return JsonResponse(current_user_budget.as_dict, safe=False)
 
 class MakeFutureExpenseSerializer(serializers.ModelSerializer):
     class Meta:

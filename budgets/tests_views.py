@@ -246,6 +246,46 @@ class TestBudgetsView(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+
+    def test_creates_a_budget_with_a_detail_such_category_is_deleted(self):
+        User.objects.create(firebase_uid='randomrandomrandomrandomrand', email='random@random.com')
+        new_category = Category.create_category_for_user(User.objects.all()[0], name='A Category', material_ui_icon_name='Home')
+
+        self.create_a_budget_with_response('2023-11-01', '2023-12-01', [
+            {
+                'category_id': new_category.id,
+                'limit': 5000
+            }
+        ], status.HTTP_201_CREATED)
+
+        new_category.delete()
+
+        response = self.get_budget_with_response(status.HTTP_200_OK)
+
+        self.assertEqual(len(response.json()), 0)
+
+    def test_current_budget_with_a_detail_such_category_is_deleted(self):
+        User.objects.create(firebase_uid='randomrandomrandomrandomrand', email='random@random.com')
+        new_category = Category.create_category_for_user(User.objects.all()[0], name='A Category', material_ui_icon_name='Home')
+
+        self.create_a_budget_with_response('2023-01-01', '2024-01-01', [
+            {
+                'category_id': new_category.id,
+                'limit': 5000
+            }
+        ], status.HTTP_201_CREATED)
+
+        response = self.client.get(self.endpoint + '/current')
+
+        self.assertNotEqual(response.json(), {})
+
+        new_category.delete()
+
+        response = self.client.get(self.endpoint + '/current')
+
+        self.assertEqual(response.json(), {})
+
+
     def test_creates_two_budgets_with_different_details_for_user_and_then_he_retrieve_them(self):
         self.create_a_budget_with_response('2023-11-01', '2023-12-01', [
             {
