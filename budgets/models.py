@@ -58,7 +58,7 @@ class Budget(models.Model):
             'total_limit': float(self.total_limit),
             'total_spent': float(self.total_spent),
             'active': self.active,
-            'editable': self.editable,
+            'has_finished': self.has_finished
         }
 
     @property
@@ -72,7 +72,11 @@ class Budget(models.Model):
 
     @property
     def has_began(self):
-        return self.initial_date < date.today()
+        return self.initial_date <= date.today()
+
+    @property
+    def has_finished(self):
+        return self.has_began and self.final_date < date.today()
 
     def add_limit(self, category, limit):
         return LimitDetail.objects.create(category=category, value=limit, assigned_budget=self)
