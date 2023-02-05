@@ -92,6 +92,17 @@ class TestBudgetsView(APITestCase):
             }
         ], status.HTTP_201_CREATED)
 
+    def test_create_one_budget_with_one_future_expense_detail_but_cannot_be_created_with_negative_value(self):
+        self.create_a_budget_with_response('2023-05-01', '2024-06-01', [
+            {'category_id': 1, 'limit': 9800.50},
+            {
+                'category_id': 1,
+                'value': -5000,
+                'expiration_date': '2023-11-05',
+                'name': 'AySa Bill'
+            }
+        ], status.HTTP_400_BAD_REQUEST)
+
     def test_create_one_budget_with_one_future_expense_that_superpass_cateogry_limit(self):
         self.create_a_budget_with_response('2023-05-01', '2024-06-01', [
             {'category_id': 1, 'limit': 2000},
@@ -236,7 +247,7 @@ class TestBudgetsView(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_creates_two_budgets_with_different_details_for_user_and_then_he_retrieve_them(self):
-        self.create_a_budget_with_response('2023-05-01', '2023-06-01', [
+        self.create_a_budget_with_response('2023-11-01', '2023-12-01', [
             {
                 'category_id': 1,
                 'limit': 5000
@@ -288,6 +299,70 @@ class TestBudgetsView(APITestCase):
                 'expiration_date': '2023-12-05'
             }
         ], status.HTTP_400_BAD_REQUEST)
+
+    def test_user_creates_a_budget_and_then_he_modifies_with_negative_limit(self):
+        self.create_a_budget_with_response('2030-02-01', '2050-02-01', [
+            {
+                'category_id': 3,
+                'limit': 1500
+            },
+            {
+                'category_id': 2,
+                'limit': 5000
+            }
+        ], status.HTTP_201_CREATED)
+
+        response = self.patch_a_budget_with_response(1, '2021-01-01', '2024-02-01', [
+            {
+                'category_id': 1,
+                'limit': 1000
+            },
+            {
+                'category_id': 2,
+                'limit': -5000
+            }
+        ], status.HTTP_400_BAD_REQUEST)
+
+    def test_user_creates_a_budget_and_then_he_modifies_with_negative_value(self):
+        response = self.create_a_budget_with_response('2030-02-01', '2050-02-01', [
+            {
+                'category_id': 3,
+                'limit': 1500
+            },
+            {
+                'category_id': 3,
+                'value': 1000,
+                'name': 'AySa Bill',
+                'expiration_date': '2030-12-05'
+            }
+        ], status.HTTP_201_CREATED)
+
+        response = self.patch_a_budget_with_response(1, '2021-01-01', '2024-02-01', [
+            {
+                'category_id': 1,
+                'limit': 1000
+            },
+            {
+                'category_id': 3,
+                'value': -1000,
+                'name': 'AySa Bill',
+                'expiration_date': '2023-12-05'
+            }
+        ], status.HTTP_400_BAD_REQUEST)
+
+    def test_user_creates_a_budget_but_fails_with_empty_modification(self):
+        self.create_a_budget_with_response('2030-02-01', '2050-02-01', [
+            {
+                'category_id': 3,
+                'limit': 1500
+            },
+            {
+                'category_id': 2,
+                'limit': 1000
+            }
+        ], status.HTTP_201_CREATED)
+
+        response = self.patch_a_budget_with_response(1, '2021-01-01', '2024-02-01', [], status.HTTP_400_BAD_REQUEST)
 
     def test_user_cannot_create_or_update_a_budget_with_dates_unsorted(self):
         self.create_a_budget_with_response('2050-02-01', '2030-02-01', [
@@ -427,6 +502,26 @@ class TestBudgetsView(APITestCase):
             }
         ], status.HTTP_400_BAD_REQUEST)
 
+    def test_user_creates_a_budget_but_cannot_create_it_with_repeated_category_limits(self):
+        self.create_a_budget_with_response('2030-02-01', '2050-02-01', [
+            {
+                'category_id': 3,
+                'limit': 1500
+            },
+                        {
+                'category_id': 3,
+                'limit': 5000
+            }
+        ], status.HTTP_400_BAD_REQUEST)
+
+    def test_user_creates_a_budget_but_cannot_create_it_with_negative_limit(self):
+        self.create_a_budget_with_response('2030-02-01', '2050-02-01', [
+            {
+                'category_id': 3,
+                'limit': -1500
+            }
+        ], status.HTTP_400_BAD_REQUEST)
+
     def test_user_creates_an_budget_with_limit_id_that_does_not_exist(self):
         self.create_a_budget_with_response('2020-02-01', '2050-02-01', [
             {
@@ -466,7 +561,7 @@ class TestBudgetsView(APITestCase):
             }
         ], status.HTTP_201_CREATED)
 
-        self.create_a_budget_with_response('2023-01-01', '2050-02-01', [
+        self.create_a_budget_with_response('2023-07-01', '2050-08-01', [
             {
                 'category_id': 3,
                 'limit': 1500
