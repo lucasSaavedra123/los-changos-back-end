@@ -43,7 +43,7 @@ class Category(models.Model):
 
     @classmethod
     def create_category_for_user(cls, user, **kwargs):
-        cls.objects.create(user=user, **kwargs)
+        return cls.objects.create(user=user, **kwargs)
 
     @classmethod
     def categories_from_user(cls, user):

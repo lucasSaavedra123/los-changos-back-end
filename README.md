@@ -13,22 +13,8 @@ Official Repository of Walletify. Website: [Link](www.walletify-backend.herokuap
 
 ### Virtual Environment
 
-We strongly recommend to use virtual environments to develop for the Walletify back-end. There are two straightforward ways to do this:
+We strongly recommend to use virtual environments to develop for the Walletify back-end.
 
-#### Conda
-To install the enviroment from Conda just type:
-
-    conda env create -n "walletify-env" python=3.9
-
-Then, activate it:
-
-    conda activate walletify-env
-
-Finally, install the requirements:
-
-    pip install -r requirements.txt
-
-#### venv
 Verify your python version (It should be 3.9 or greater):
 
     python --version
@@ -49,5 +35,9 @@ Finally, install the required modules:
 ### Generate requirements.txt
 
     pip freeze > requirements.txt
+
+### API Documentation
+
+API Documentation can be found [here](https://walletify-backend.herokuapp.com/docs/).
 
 **Start Coding!**
