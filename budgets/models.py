@@ -58,6 +58,7 @@ class Budget(models.Model):
             'total_limit': float(self.total_limit),
             'total_spent': float(self.total_spent),
             'active': self.active,
+            'editable': self.editable,
             'has_finished': self.has_finished
         }
 

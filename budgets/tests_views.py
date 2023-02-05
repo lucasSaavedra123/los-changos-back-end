@@ -83,6 +83,7 @@ class TestBudgetsView(APITestCase):
 
     def test_create_one_budget_with_one_future_expense_detail_for_user(self):
         self.create_a_budget_with_response('2023-05-01', '2024-06-01', [
+            {'category_id': 1, 'limit': 9800.50},
             {
                 'category_id': 1,
                 'value': 5000,
@@ -90,6 +91,51 @@ class TestBudgetsView(APITestCase):
                 'name': 'AySa Bill'
             }
         ], status.HTTP_201_CREATED)
+
+    def test_create_one_budget_with_one_future_expense_that_superpass_cateogry_limit(self):
+        self.create_a_budget_with_response('2023-05-01', '2024-06-01', [
+            {'category_id': 1, 'limit': 2000},
+            {
+                'category_id': 1,
+                'value': 5000,
+                'expiration_date': '2023-11-05',
+                'name': 'AySa Bill'
+            }
+        ], status.HTTP_400_BAD_REQUEST)
+
+    def test_create_one_budget_with_more_than_one_future_expense_that_superpass_cateogry_limit(self):
+        self.create_a_budget_with_response('2023-05-01', '2024-06-01', [
+            {'category_id': 1, 'limit': 2000},
+            {
+                'category_id': 1,
+                'value': 1000,
+                'expiration_date': '2023-11-05',
+                'name': 'AySa Bill'
+            },
+                        {
+                'category_id': 1,
+                'value': 1001,
+                'expiration_date': '2023-11-06',
+                'name': 'AySa Bill 2'
+            }
+        ], status.HTTP_400_BAD_REQUEST)
+
+    def test_user_create_future_expense_with_invalid_date_format(self):
+        self.create_a_budget_with_response('2023-22-02', '2024-23-03', [
+            {'category_id': 1, 'limit': 2000},
+            {
+                'category_id': 1,
+                'value': 1000,
+                'expiration_date': '2023-23-02',
+                'name': 'AySa Bill'
+            },
+                        {
+                'category_id': 1,
+                'value': 1000,
+                'expiration_date': '2024-24-02',
+                'name': 'AySa Bill 2'
+            }
+        ], status.HTTP_400_BAD_REQUEST)
 
     def test_create_one_budget_with_one_future_expense_but_fails_because_detail_is_out_of_budget_dates(self):
         self.create_a_budget_with_response('2023-05-01', '2024-06-01', [
@@ -112,6 +158,7 @@ class TestBudgetsView(APITestCase):
 
     def test_create_one_budget_with_one_future_expense_and_user_execute_payment(self):
         self.create_a_budget_with_response('2022-01-01', '2024-06-01', [
+            {'category_id':1, 'limit': 5900},
             {
                 'category_id': 1,
                 'value': 5000,
@@ -129,6 +176,10 @@ class TestBudgetsView(APITestCase):
         self.create_a_budget_with_response('2022-01-01', '2024-06-01', [
             {
                 'category_id': 1,
+                'limit': 5000,
+            },
+            {
+                'category_id': 1,
                 'value': 5000,
                 'expiration_date': '2023-12-05',
                 'name': 'AySa Bill'
@@ -136,6 +187,16 @@ class TestBudgetsView(APITestCase):
         ], status.HTTP_201_CREATED)
 
         self.make_future_expense_in_budget_with_response(15, '2023-01-12', status.HTTP_400_BAD_REQUEST)
+
+    def test_create_one_budget_but_cannot_be_created_without_a_limit(self):
+        self.create_a_budget_with_response('2022-01-01', '2024-06-01', [
+            {
+                'category_id': 1,
+                'value': 5000,
+                'expiration_date': '2023-12-05',
+                'name': 'AySa Bill'
+            }
+        ], status.HTTP_400_BAD_REQUEST)
 
     def test_create_one_budget_with_details_for_user_and_he_retrieve_it(self):
         self.create_a_budget_with_response('2023-05-01', '2024-06-01', [
@@ -200,6 +261,9 @@ class TestBudgetsView(APITestCase):
         first_budget = response.json()[0]
 
         self.assertEqual(len(first_budget['details']), 5)
+
+    def test_user_fails_to_create_empty_budget(self):
+        self.create_a_budget_with_response('2030-02-01', '2050-02-01', [], status.HTTP_400_BAD_REQUEST)
 
     def test_user_creates_a_budget_and_then_he_modifies_it_but_forgots_field(self):
         self.create_a_budget_with_response('2030-02-01', '2050-02-01', [
@@ -314,13 +378,13 @@ class TestBudgetsView(APITestCase):
 
         response = self.patch_a_budget_with_response(1, '2021-01-01', '2024-02-01', [
             {
-                'category_id': 1,
+                'category_id': 3,
                 'limit': 1000
             },
             {
                 'category_id': 3,
-                'value': 2000,
-                'name': 'AySa Bill',
+                'value': 750,
+                'name': 'A Bill',
                 'expiration_date': '2023-12-05'
             }
         ], status.HTTP_200_OK)
@@ -333,10 +397,35 @@ class TestBudgetsView(APITestCase):
         self.assertEqual(response['initial_date'], '2021-01-01')
         self.assertEqual(response['editable'], False)
         self.assertEqual(response['final_date'], '2024-02-01')
-        self.assertEqual(response['details'][0]['category']['id'], 1)
+        self.assertEqual(response['details'][0]['category']['id'], 3)
         self.assertEqual(response['details'][0]['limit'], 1000.00)
         self.assertEqual(response['details'][1]['category']['id'], 3)
-        self.assertEqual(response['details'][1]['value'], 2000.00)
+        self.assertEqual(response['details'][1]['value'], 750)
+
+    def test_user_creates_a_budget_and_then_he_modifies_it_but_limits_do_not_exist_for_future_expenses(self):
+        self.create_a_budget_with_response('2030-02-01', '2050-02-01', [
+            {
+                'category_id': 3,
+                'limit': 1500
+            },
+            {
+                'category_id': 2,
+                'limit': 5000
+            }
+        ], status.HTTP_201_CREATED)
+
+        response = self.patch_a_budget_with_response(1, '2021-01-01', '2024-02-01', [
+            {
+                'category_id': 1,
+                'limit': 1000
+            },
+            {
+                'category_id': 3,
+                'value': 750,
+                'name': 'AySa Bill',
+                'expiration_date': '2023-12-05'
+            }
+        ], status.HTTP_400_BAD_REQUEST)
 
     def test_user_creates_an_budget_with_limit_id_that_does_not_exist(self):
         self.create_a_budget_with_response('2020-02-01', '2050-02-01', [
