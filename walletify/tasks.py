@@ -18,7 +18,7 @@ def notify_expiration_expenses():
 
             if len(future_expenses) > 0:
 
-                string_email = "¡ACUERDATE DE PAGAR!" + '\n\n' + "Recuerda que se vence el siguientes pagos: "
+                string_email = "¡ACUERDATE DE PAGAR!" + '\n\n' + "Recuerda que se vence los siguientes pagos: "
 
                 for future_expense_detail in FutureExpenseDetail.objects.all():
 
