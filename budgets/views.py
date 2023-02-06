@@ -119,11 +119,9 @@ def budget(request):
 
     #The following validations cannot be included in Django's serializers
     if request.method == 'POST' or request.method == 'PATCH':
-        try:
-            if datetime.strptime(request_body['initial_date'], '%Y-%m-%d') > datetime.strptime(request_body['final_date'], '%Y-%m-%d'):
-                return Response({"message": f"Initial date cannot be greater than final date"}, status=status.HTTP_400_BAD_REQUEST)
-        except e:
-            return Response({"message": f"Invalid date format. Expected format: YYYY-MM-DD"}, status=status.HTTP_400_BAD_REQUEST)
+        if datetime.strptime(request_body['initial_date'], '%Y-%m-%d') > datetime.strptime(request_body['final_date'], '%Y-%m-%d'):
+            return Response({"message": f"Initial date cannot be greater than final date"}, status=status.HTTP_400_BAD_REQUEST)
+
     if request.method == 'GET':
         user_budgets = Budget.all_from_user(request.META['user'])
         budgets_as_dict = [budget.as_dict for budget in user_budgets]
